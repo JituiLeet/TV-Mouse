@@ -63,25 +63,6 @@ public class MouseAccessibilityService extends AccessibilityService {
         boolean up = e.getAction() == KeyEvent.ACTION_UP;
         MouseService ms = ServiceRegistry.get();
 
-        // IMPORTANT for TV remotes:
-        // Volume keys are system/media keys. They must never enter the mouse
-        // key state machine. Some TV firmwares do not reliably deliver the
-        // corresponding ACTION_UP while an AccessibilityService is filtering
-        // keys; if a stale key is left "held", the TV can keep changing volume
-        // until another key resets the state.
-        //
-        // Always leave VOLUME_UP/VOLUME_DOWN untouched and clear any mouse
-        // gesture state when one is observed.
-        if (k == KeyEvent.KEYCODE_VOLUME_UP ||
-            k == KeyEvent.KEYCODE_VOLUME_DOWN ||
-            k == KeyEvent.KEYCODE_MUTE) {
-            stopMove(0);
-            cancelLongPress();
-            centerDownAt = 0;
-            longPressSent = false;
-            return false;
-        }
-
         // When the mouse service is not running, this accessibility service must
         // not handle any remote-control key.
         if (ms == null) return false;

@@ -17,9 +17,9 @@ Open the app's main interface, grant the overlay permission and accessibility se
 
 After enabling, use the remote's directional keys to move the pointer, press the confirm button to click, and long-press the confirm button to perform a long-press action.
 
-Long-press the Back button for 5 seconds to open settings. You can also directly enter custom appearance or language settings from the app's main interface.
+Long-press the Back button for 3 seconds to open settings. You can also directly enter custom appearance or language settings from the app's main interface.
 
-After enabling "Swipe Interface Operation" in settings, you can control interface swiping. After enabling it, long-press the Back button for 2 seconds or turn it off in settings.
+After enabling "Swipe Interface Operation" in settings, you can control interface swiping. After enabling it, long-press the Back button for 3 seconds or turn it off in settings.
 
 In the app's main interface or settings, you can hide or turn off the mouse pointer. Set the language and customize the appearance.
 

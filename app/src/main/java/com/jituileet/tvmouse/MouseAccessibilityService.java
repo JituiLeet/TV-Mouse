@@ -82,7 +82,7 @@ public class MouseAccessibilityService extends AccessibilityService {
                     }
                 }};
                 MouseService check = ServiceRegistry.get();
-                handler.postDelayed(backSettings, (check != null && check.isScroll()) ? 2000 : 5000);
+                handler.postDelayed(backSettings, 3000);
                 return true;
             }
             if (up) {

@@ -49,6 +49,6 @@
     <string name="cannot_open_link">Unable to open link</string>
     <string name="ok">OK</string>
     <string name="about_title">Help</string>
-    <string name="about_message">Core features:\n\n• Move the mouse pointer with the TV remote D-pad; hold a direction key for continuous movement.\n• Press OK to click; hold OK for a long press.\n• While the mouse is running, hold Back for 5 seconds to open the Android TV-style settings panel.\n• Enable or disable scrolling from Settings.\n• Customize the mouse pointer appearance and switch between saved appearances.\n• Supports Simplified Chinese and English.</string>
+    <string name="about_message">Core features:\n\n• Move the mouse pointer with the TV remote D-pad; hold a direction key for continuous movement.\n• Press OK to click; hold OK for a long press.\n• While the mouse is running, hold Back for 3 seconds to open the Android TV-style settings panel.\n• Enable or disable scrolling from Settings.\n• Customize the mouse pointer appearance and switch between saved appearances.\n• Supports Simplified Chinese and English.</string>
     <string name="accessibility_hint">TV Mouse accessibility service for controlling the mouse pointer and performing clicks, long presses, and scrolling.</string>
 </resources>

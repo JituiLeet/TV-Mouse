@@ -49,6 +49,6 @@
     <string name="cannot_open_link">无法打开链接</string>
     <string name="ok">知道了</string>
     <string name="about_title">说明</string>
-    <string name="about_message">核心功能：\n\n• 使用电视遥控器方向键移动鼠标指针，按住方向键可连续移动。\n• 确定键可执行单击，长按确定键可执行长按。\n• 鼠标开启后长按返回键 5 秒，可打开 Android TV 风格设置。\n• 可在设置中开启或关闭滑动界面操作。\n• 支持自定义鼠标指针外观，可添加并切换不同外观。\n• 支持简体中文与 English。</string>
+    <string name="about_message">核心功能：\n\n• 使用电视遥控器方向键移动鼠标指针，按住方向键可连续移动。\n• 确定键可执行单击，长按确定键可执行长按。\n• 鼠标开启后长按返回键 3 秒，可打开 Android TV 风格设置。\n• 可在设置中开启或关闭滑动界面操作。\n• 支持自定义鼠标指针外观，可添加并切换不同外观。\n• 支持简体中文与 English。</string>
     <string name="accessibility_hint">电视鼠标无障碍服务，用于控制鼠标指针并执行点击、长按和滑动操作。</string>
 </resources>

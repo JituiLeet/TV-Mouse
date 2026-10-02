@@ -1,0 +1,35 @@
+plugins { id 'com.android.application' }
+
+android {
+    signingConfigs {
+        release {
+            def keystorePath = System.getenv('RELEASE_KEYSTORE_FILE')
+            if (keystorePath != null) {
+                storeFile file(keystorePath)
+            }
+            storePassword System.getenv('KEY_STORE_PASSWORD')
+            keyPassword System.getenv('KEY_PASSWORD')
+            keyAlias System.getenv('ALIAS')
+            storeType 'PKCS12'
+        }
+    }
+
+    namespace 'com.jituileet.tvmouse'
+    compileSdk 35
+
+    buildTypes {
+        release {
+            signingConfig signingConfigs.release
+            minifyEnabled false
+        }
+    }
+
+    defaultConfig {
+        applicationId 'com.jituileet.tvmouse'
+        minSdk 19
+        targetSdk 35
+        versionCode 1
+        versionName '1.0.0'
+    }
+}
+

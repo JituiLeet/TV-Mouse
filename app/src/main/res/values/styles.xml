@@ -1,0 +1,18 @@
+<resources>
+    <style name="AppTheme" parent="android:style/Theme.Holo.NoActionBar">
+        <item name="android:fontFamily">sans</item>
+        <item name="android:windowActionModeOverlay">true</item>
+        <item name="android:colorAccent">#90CAF9</item>
+        <item name="android:navigationBarColor">#101114</item>
+        <item name="android:windowLightStatusBar">false</item>
+        <item name="android:statusBarColor">#101114</item>
+    </style>
+    <style name="SettingsTheme" parent="android:style/Theme.Holo.NoActionBar">
+        <item name="android:windowIsTranslucent">false</item>
+        <item name="android:windowBackground">@android:color/transparent</item>
+        <item name="android:windowNoTitle">true</item>
+        <item name="android:colorAccent">#90CAF9</item>
+        <item name="android:fontFamily">sans</item>
+        <item name="android:windowActionModeOverlay">true</item>
+    </style>
+</resources>

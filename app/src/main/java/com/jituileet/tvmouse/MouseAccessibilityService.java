@@ -26,6 +26,7 @@ public class MouseAccessibilityService extends AccessibilityService {
     private Runnable longPress;
     private Runnable backLongPress;
     private boolean backKeyTracking;
+    private boolean backLongPressTriggered;
     private int volumeKeyHeld = 0;
     private boolean menuHeld, comboTriggered;
     private WindowManager pointerWm;
@@ -69,28 +70,34 @@ public class MouseAccessibilityService extends AccessibilityService {
         // not handle any remote-control key.
         if (ms == null) return false;
 
-        // Only watch the Back key while Fixed Scroll is active. Holding it for
-        // three seconds exits that mode; otherwise Back is left to the system.
+        // Observe Back only while Fixed Scroll is active. Short presses are
+        // passed through untouched; consume only the release of a 3-second hold.
         if (k == KeyEvent.KEYCODE_BACK) {
             if (down && e.getRepeatCount() == 0 && ms.isScroll()) {
                 backKeyTracking = true;
+                backLongPressTriggered = false;
                 if (backLongPress != null) handler.removeCallbacks(backLongPress);
                 backLongPress = new Runnable() {
                     @Override public void run() {
                         MouseService current = ServiceRegistry.get();
-                        if (current != null && current.isScroll()) current.setScroll(false);
+                        if (backKeyTracking && current != null && current.isScroll()) {
+                            backLongPressTriggered = true;
+                            current.setScroll(false);
+                        }
                     }
                 };
                 handler.postDelayed(backLongPress, 3000);
+                return false;
             }
-            if (backKeyTracking) {
-                if (up) {
-                    if (backLongPress != null) handler.removeCallbacks(backLongPress);
-                    backLongPress = null;
-                    backKeyTracking = false;
-                }
-                return true;
+            if (up && backKeyTracking) {
+                if (backLongPress != null) handler.removeCallbacks(backLongPress);
+                backLongPress = null;
+                backKeyTracking = false;
+                boolean consume = backLongPressTriggered;
+                backLongPressTriggered = false;
+                return consume;
             }
+            // Do not monitor or intercept Back outside Fixed Scroll mode.
             return false;
         }
 

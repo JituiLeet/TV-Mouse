@@ -1,0 +1,6 @@
+<resources>
+    <color name="tv_background">#101114</color>
+    <color name="tv_panel">#202226</color>
+    <color name="tv_focus">#3F51B5</color>
+    <color name="tv_text">#FFFFFF</color>
+</resources>

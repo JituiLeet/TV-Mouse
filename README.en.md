@@ -7,7 +7,8 @@ Control the mouse pointer on Android TV with a remote, and operate other apps ju
 ## Features
 
 - Floating mouse pointer: move with the directional keys, click with the confirm key, and long-press with a long press of the confirm key.
-- After enabling "Fixed Sliding" in settings, you can control interface scrolling.
+- Fixed Scroll: press Volume Down + Menu to toggle it and control interface scrolling. While enabled, hold Back for 3 seconds to turn it off.
+- Quick Settings Access: press Volume Up + Menu.
 - Supports custom pointer appearances: includes a default appearance, and you can also import images and save them as new appearances.
 - Supports Chinese and English interfaces: follows the system language by default, and can also be switched manually.
 
@@ -19,7 +20,7 @@ After enabling, use the remote's directional keys to move the pointer, press the
 
 Press Volume Up + Menu to open settings. You can also enter custom appearance or language settings directly from the app's main interface.
 
-Press Volume Down + Menu to toggle "Fixed Scroll" and control interface scrolling. The Back key is no longer used as a shortcut.
+Press Volume Down + Menu to toggle "Fixed Scroll" and control interface scrolling. While Fixed Scroll is active, hold the Back key for 3 seconds to turn it off.
 
 In the app's main interface or settings, you can hide or turn off the mouse pointer. Set the language and customize the appearance.
 

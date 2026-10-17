@@ -14,6 +14,7 @@ import android.os.*;
 import android.view.accessibility.AccessibilityEvent;
 import android.view.accessibility.AccessibilityNodeInfo;
 import android.view.KeyEvent;
+import android.view.ViewConfiguration;
 
 public class MouseAccessibilityService extends AccessibilityService {
     private static MouseAccessibilityService instance;
@@ -23,6 +24,8 @@ public class MouseAccessibilityService extends AccessibilityService {
     private boolean longPressSent;
     private Runnable repeat;
     private Runnable longPress;
+    private Runnable backLongPress;
+    private boolean backKeyTracking;
     private int volumeKeyHeld = 0;
     private boolean menuHeld, comboTriggered;
     private WindowManager pointerWm;
@@ -66,6 +69,31 @@ public class MouseAccessibilityService extends AccessibilityService {
         // not handle any remote-control key.
         if (ms == null) return false;
 
+        // Only watch the Back key while Fixed Scroll is active. Holding it for
+        // three seconds exits that mode; otherwise Back is left to the system.
+        if (k == KeyEvent.KEYCODE_BACK) {
+            if (down && e.getRepeatCount() == 0 && ms.isScroll()) {
+                backKeyTracking = true;
+                if (backLongPress != null) handler.removeCallbacks(backLongPress);
+                backLongPress = new Runnable() {
+                    @Override public void run() {
+                        MouseService current = ServiceRegistry.get();
+                        if (current != null && current.isScroll()) current.setScroll(false);
+                    }
+                };
+                handler.postDelayed(backLongPress, 3000);
+            }
+            if (backKeyTracking) {
+                if (up) {
+                    if (backLongPress != null) handler.removeCallbacks(backLongPress);
+                    backLongPress = null;
+                    backKeyTracking = false;
+                }
+                return true;
+            }
+            return false;
+        }
+
         if (k == KeyEvent.KEYCODE_VOLUME_UP || k == KeyEvent.KEYCODE_VOLUME_DOWN || k == KeyEvent.KEYCODE_MENU) {
             if (down) {
                 if (k == KeyEvent.KEYCODE_MENU) menuHeld = true;
@@ -98,7 +126,7 @@ public class MouseAccessibilityService extends AccessibilityService {
                 longPress = new Runnable() { @Override public void run() {
                     if (centerDownAt != 0) { longPressSent = true; performLongClickAt(currentX(), currentY()); }
                 }};
-                handler.postDelayed(longPress, 550);
+                handler.postDelayed(longPress, ViewConfiguration.getLongPressTimeout());
                 return true;
             }
             if (up) {
@@ -326,6 +354,8 @@ public class MouseAccessibilityService extends AccessibilityService {
     @Override public void onInterrupt(){}
     @Override public void onDestroy(){
         stopMove(0);cancelLongPress();
+        if (backLongPress != null) handler.removeCallbacks(backLongPress);
+        backLongPress = null;
         removePointerInternal();
         MouseService ms=ServiceRegistry.get();
         if(ms!=null) ms.restoreFallbackPointer();

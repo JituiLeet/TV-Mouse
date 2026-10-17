@@ -49,6 +49,6 @@
     <string name="cannot_open_link">Unable to open link</string>
     <string name="ok">OK</string>
     <string name="about_title">Help</string>
-    <string name="about_message">Core features:\n\n• Move the mouse pointer with the TV remote D-pad; hold a direction key for continuous movement.\n• Press OK to click; hold OK for a long press.\n• At screen edges, the pointer stays in place and scrolls in that direction. Press Volume Up + Menu to open settings, or Volume Down + Menu to toggle Fixed Scroll.\n• Customize separate pointer appearances for normal and Fixed Scroll modes, or share one appearance.\n• Supports Simplified Chinese and English.</string>
+    <string name="about_message">Core features:\n\n• Move the mouse pointer with the TV remote D-pad; hold a direction key for continuous movement.\n• Press OK to click; hold OK for a long press.\n• At screen edges, the pointer stays in place and scrolls in that direction. Press Volume Up + Menu to open settings, or Volume Down + Menu to toggle Fixed Scroll. While Fixed Scroll is active, hold Back for 3 seconds to turn it off.\n• Customize separate pointer appearances for normal and Fixed Scroll modes, or share one appearance.\n• Supports Simplified Chinese and English.</string>
     <string name="accessibility_hint">TV Mouse accessibility service for controlling the mouse pointer and performing clicks, long presses, and scrolling.</string>
 </resources>

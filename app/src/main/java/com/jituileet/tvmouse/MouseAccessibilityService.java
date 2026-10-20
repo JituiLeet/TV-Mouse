@@ -108,15 +108,17 @@ public class MouseAccessibilityService extends AccessibilityService {
                 if (menuHeld && volumeKeyHeld != 0 && !comboTriggered) {
                     comboTriggered = true;
                     if (volumeKeyHeld == KeyEvent.KEYCODE_VOLUME_UP) ms.showTvPanel();
-                    else if (volumeKeyHeld == KeyEvent.KEYCODE_VOLUME_DOWN) ms.setScroll(!ms.isScroll());
+                    else if (volumeKeyHeld == KeyEvent.KEYCODE_VOLUME_DOWN && !ms.isScroll()) ms.setScroll(true);
                 }
-                if (menuHeld && volumeKeyHeld != 0) return true;
+                // Always consume Menu itself. Otherwise Android TV launchers may
+                // handle a lone Menu press before the second combo key arrives.
+                if (k == KeyEvent.KEYCODE_MENU || (menuHeld && volumeKeyHeld != 0)) return true;
             } else if (up) {
                 boolean combo = menuHeld && volumeKeyHeld != 0;
                 if (k == KeyEvent.KEYCODE_MENU) menuHeld = false;
                 else if (volumeKeyHeld == k) volumeKeyHeld = 0;
                 if (!menuHeld || volumeKeyHeld == 0) comboTriggered = false;
-                if (combo) return true;
+                if (k == KeyEvent.KEYCODE_MENU || combo) return true;
             }
             return false;
         }
@@ -248,9 +250,7 @@ public class MouseAccessibilityService extends AccessibilityService {
             s.pointerView.setImageResource(fixed ? R.drawable.ic_scroll_pointer : R.drawable.ic_mouse_pointer);
             // When fixed mode shares the normal appearance, keep the distinct
             // built-in scroll cursor visible instead of reapplying the normal image.
-            File f=fixed
-                    ? (AppearanceManager.isFixedShared(owner) ? null : AppearanceManager.selectedFixedFile(owner))
-                    : AppearanceManager.selectedFile(owner);
+            File f = fixed ? AppearanceManager.selectedFixedFile(owner) : AppearanceManager.selectedFile(owner);
             if(f!=null){
                 BitmapFactory.Options o=new BitmapFactory.Options(); o.inScaled=false;
                 android.graphics.Bitmap b=BitmapFactory.decodeFile(f.getAbsolutePath(),o);

@@ -99,8 +99,48 @@ public class SettingsActivity extends Activity {
         TextView radio=text(AppearanceManager.getSelected(this).equals(id)?"●":"○",22,true); radio.setGravity(Gravity.CENTER);
         row.addView(radio,new LinearLayout.LayoutParams(dp(44),dp(68)));
         TextView tx=text(name,16,false); row.addView(tx,new LinearLayout.LayoutParams(0,dp(68),1));
-        row.setOnClickListener(v->{AppearanceManager.select(this,id);showAppearancePanel();});
+        if (AppearanceManager.isCustom(id)) {
+            row.setOnClickListener(v -> showAppearanceActions(id));
+        } else {
+            row.setOnClickListener(v->{AppearanceManager.select(this,id);showAppearancePanel();});
+        }
         box.addView(row,new LinearLayout.LayoutParams(-1,dp(68)));
+    }
+
+    private void showAppearanceActions(final String id) {
+        final int index;
+        try { index = Integer.parseInt(id.substring("custom_".length())); }
+        catch (Exception e) { return; }
+        if (index < 0 || index >= AppearanceManager.count(this)) return;
+        final String currentName = AppearanceManager.name(this, index);
+        final String[] actions = new String[] {
+            getString(R.string.use_as_pointer), getString(R.string.rename_appearance), getString(R.string.delete_appearance)
+        };
+        new AlertDialog.Builder(this).setTitle(currentName).setItems(actions, (dialog, which) -> {
+            if (which == 0) {
+                AppearanceManager.select(this, id);
+                toast(getString(R.string.appearance_added));
+                showAppearancePanel();
+            } else if (which == 1) {
+                final EditText input = new EditText(this);
+                input.setSingleLine(true); input.setText(currentName); input.setSelection(input.length());
+                AlertDialog rename = new AlertDialog.Builder(this).setTitle(R.string.rename_appearance).setView(input)
+                    .setPositiveButton(R.string.save, null).setNegativeButton(R.string.cancel, null).create();
+                rename.setOnShowListener(x -> rename.getButton(AlertDialog.BUTTON_POSITIVE).setOnClickListener(v -> {
+                    if (!AppearanceManager.rename(this, index, input.getText().toString())) {
+                        toast(getString(R.string.appearance_error_name)); return;
+                    }
+                    rename.dismiss(); showAppearancePanel();
+                }));
+                rename.show();
+            } else if (which == 2) {
+                new AlertDialog.Builder(this).setTitle(R.string.delete_appearance)
+                    .setMessage(getString(R.string.delete_appearance_confirm, currentName))
+                    .setPositiveButton(R.string.delete_appearance, (d, w) -> {
+                        AppearanceManager.delete(this, index); showAppearancePanel();
+                    }).setNegativeButton(R.string.cancel, null).show();
+            }
+        }).show();
     }
 
     private void pickImage() {

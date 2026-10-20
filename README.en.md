@@ -2,37 +2,33 @@
 
 [简体中文](./README.md)　|　[English](./README.en.md)
 
-Control the mouse pointer on Android TV with a remote, and operate other apps just like using a mouse.
+Control the mouse pointer on Android TV with a remote and operate other apps like using a mouse.
 
 ## Features
 
-- Floating mouse pointer: move with the directional keys, click with the confirm key, and long-press with a long press of the confirm key.
-- Fixed Scroll: press Volume Down + Menu to toggle it and control interface scrolling. While enabled, hold Back for 3 seconds to turn it off.
+- Floating mouse pointer: move with the D-pad, click with OK, and hold OK to perform a long press.
+- Fixed Scroll: press Volume Down + Menu to enable it and control interface scrolling. Once enabled, it can only be disabled by holding Back for 3 seconds.
 - Quick Settings Access: press Volume Up + Menu.
-- Supports custom pointer appearances: includes a default appearance, and you can also import images and save them as new appearances.
-- Supports Chinese and English interfaces: follows the system language by default, and can also be switched manually.
+- Custom pointer appearances: import 128 × 128 pixel PNG or JPG images, set an appearance as the mouse pointer, rename it, or delete it. Normal and Fixed Scroll modes can share the same appearance.
+- Chinese and English interfaces, following the system language by default with manual switching available.
 
 ## Usage
 
-Open the app's main interface, grant the overlay permission and accessibility service permission, and then the mouse function can be enabled.
+Grant overlay and accessibility permissions from the app's main screen, then enable the mouse pointer. Use the remote's D-pad to move the pointer, press OK to click, and hold OK for a long press.
 
-After enabling, use the remote's directional keys to move the pointer, press the confirm key to click, and long-press the confirm key to perform a long-press action.
-
-Press Volume Up + Menu to open settings. You can also enter custom appearance or language settings directly from the app's main interface.
-
-Press Volume Down + Menu to toggle "Fixed Scroll" and control interface scrolling. While Fixed Scroll is active, hold the Back key for 3 seconds to turn it off.
-
-In the app's main interface or settings, you can hide or turn off the mouse pointer. Set the language and customize the appearance.
+Press Volume Up + Menu to open settings. Press Volume Down + Menu to enable Fixed Scroll. The shortcut will not turn Fixed Scroll off; while it is active, hold Back for 3 seconds to disable it. In normal mode, Back retains its usual system behavior.
 
 ## Custom Appearance
 
-In the "Custom Appearance" option in settings, import a `128 × 128` pixel PNG or JPG image. A PNG with a transparent background is recommended.
+In Settings > Custom Appearance, import a `128 × 128` pixel PNG or JPG image. A transparent PNG is recommended. Select a custom appearance to set it as the mouse pointer, rename it, or delete it. Normal and Fixed Scroll modes can share the same appearance.
 
-After entering a name and saving, you can switch to and use it in the appearance list.
+## Version
+
+Version: 1.1.0 (versionCode 2)
 
 ## Compatibility
 
-Supports Android 4.4 (API 19) to Android 15 (API 35).
+Android 4.4 (API 19) through Android 15 (API 35).
 
 ## License
 

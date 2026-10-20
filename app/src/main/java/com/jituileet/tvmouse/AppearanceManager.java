@@ -56,6 +56,49 @@ public final class AppearanceManager {
         } catch(Exception e){return null;}
     }
 
+
+    public static boolean rename(Context c, int index, String newName) {
+        if (index < 0 || index >= count(c) || newName == null) return false;
+        String safe = newName.trim();
+        if (safe.length() == 0) return false;
+        if (safe.length() > 24) safe = safe.substring(0, 24);
+        c.getSharedPreferences(PREF, Context.MODE_PRIVATE).edit().putString("name_" + index, safe).apply();
+        return true;
+    }
+
+    public static boolean delete(Context c, int index) {
+        int total = count(c);
+        if (index < 0 || index >= total) return false;
+        android.content.SharedPreferences prefs = c.getSharedPreferences(PREF, Context.MODE_PRIVATE);
+        String general = prefs.getString(SELECTED, "default");
+        String fixed = prefs.getString("fixed_selected", "default");
+        String deletedPath = prefs.getString("file_" + index, "");
+        if (deletedPath.length() > 0) new File(deletedPath).delete();
+
+        android.content.SharedPreferences.Editor e = prefs.edit();
+        for (int i = index; i < total - 1; i++) {
+            e.putString("name_" + i, prefs.getString("name_" + (i + 1), c.getString(R.string.appearance_fallback_name, i + 2)));
+            e.putString("file_" + i, prefs.getString("file_" + (i + 1), ""));
+        }
+        e.remove("name_" + (total - 1)).remove("file_" + (total - 1)).putInt("count", total - 1);
+        e.putString(SELECTED, remapId(general, index));
+        e.putString("fixed_selected", remapId(fixed, index));
+        e.apply();
+        MouseService service = ServiceRegistry.get();
+        if (service != null) service.applyAppearance();
+        return true;
+    }
+
+    private static String remapId(String id, int deletedIndex) {
+        if (!isCustom(id)) return id == null ? "default" : id;
+        try {
+            int n = Integer.parseInt(id.substring("custom_".length()));
+            if (n == deletedIndex) return "default";
+            if (n > deletedIndex) n--;
+            return "custom_" + n;
+        } catch (Exception e) { return "default"; }
+    }
+
     public static int count(Context c) {
         return c.getSharedPreferences(PREF, Context.MODE_PRIVATE).getInt("count", 0);
     }
@@ -107,7 +150,7 @@ public final class AppearanceManager {
         int index = count(c);
         File dir = new File(c.getFilesDir(), "appearances");
         if (!dir.exists() && !dir.mkdirs()) return Result.error(c.getString(R.string.appearance_error_directory));
-        File out = new File(dir, "appearance_" + index + ".png");
+        File out = new File(dir, "appearance_" + System.currentTimeMillis() + "_" + index + ".png");
         InputStream src = null; OutputStream dst = null;
         try {
             src = c.getContentResolver().openInputStream(uri);

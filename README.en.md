@@ -22,10 +22,6 @@ Press Volume Up + Menu to open settings. Press Volume Down + Menu to enable Fixe
 
 In Settings > Custom Appearance, import a `128 × 128` pixel PNG or JPG image. A transparent PNG is recommended. Select a custom appearance to set it as the mouse pointer, rename it, or delete it. Normal and Fixed Scroll modes can share the same appearance.
 
-## Version
-
-Version: 1.1.0 (versionCode 2)
-
 ## Compatibility
 
 Android 4.4 (API 19) through Android 15 (API 35).

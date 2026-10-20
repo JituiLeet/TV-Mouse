@@ -57,8 +57,6 @@ public class SettingsActivity extends Activity {
         addRow("↗",getString(R.string.pointer_size),v->showPointerSizeDialog());
         addRow("✦",getString(R.string.custom_appearance),v->showAppearancePanel());
         addRow("文",getString(R.string.language),v->showLanguagePanel());
-        addRow("▣",getString(R.string.open_overlay),v->openOverlaySettings());
-        addRow("♿",getString(R.string.open_accessibility),v->openAccessibilitySettings());
         addRow("■",getString(R.string.close_mouse),v->{MouseService s=ServiceRegistry.get();if(s!=null)s.stopSelf();finish();});
         addRow("G",getString(R.string.github_project),v->openGithub());
         addRow("ⓘ",getString(R.string.about),v->startActivity(new Intent(this,AboutActivity.class)));
@@ -90,8 +88,6 @@ public class SettingsActivity extends Activity {
             .setNegativeButton(R.string.cancel,null).show();
     }
 
-    private void openOverlaySettings(){try{if(Build.VERSION.SDK_INT>=23)startActivity(new Intent(android.provider.Settings.ACTION_MANAGE_OVERLAY_PERMISSION,Uri.parse("package:"+getPackageName())));else toast(getString(R.string.overlay_not_required));}catch(Exception e){startActivity(new Intent(android.provider.Settings.ACTION_SETTINGS));}}
-    private void openAccessibilitySettings(){try{startActivity(new Intent(android.provider.Settings.ACTION_ACCESSIBILITY_SETTINGS));}catch(Exception e){toast(getString(R.string.cannot_open_settings));}}
 
     private void showLanguagePanel() {
         box.removeAllViews();

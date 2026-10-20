@@ -59,7 +59,6 @@ public class SettingsActivity extends Activity {
         addRow("文",getString(R.string.language),v->showLanguagePanel());
         addRow("■",getString(R.string.close_mouse),v->{MouseService s=ServiceRegistry.get();if(s!=null)s.stopSelf();finish();});
         addRow("G",getString(R.string.github_project),v->openGithub());
-        addRow("ⓘ",getString(R.string.about),v->startActivity(new Intent(this,AboutActivity.class)));
         setContentView(screen);
         if(box.getChildCount()>1) box.getChildAt(1).requestFocus();
     }

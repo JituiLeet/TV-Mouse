@@ -45,7 +45,8 @@ public class MouseService extends Service {
 
     private void createPointer(){
         pointer=new ImageView(this); pointer.setScaleType(ImageView.ScaleType.CENTER_INSIDE);
-        WindowManager.LayoutParams p=new WindowManager.LayoutParams(dp(42),dp(42),overlayType(),
+        int pointerSize=pointerSizePx();
+        WindowManager.LayoutParams p=new WindowManager.LayoutParams(pointerSize,pointerSize,overlayType(),
             WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE|WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE|
             WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN,
             PixelFormat.TRANSLUCENT);
@@ -96,7 +97,8 @@ public class MouseService extends Service {
         }
         int sw=getResources().getDisplayMetrics().widthPixels;
         int sh=getResources().getDisplayMetrics().heightPixels;
-        float maxX=Math.max(0,sw-dp(42)), maxY=Math.max(0,sh-dp(42));
+        int size=pointerSizePx();
+        float maxX=Math.max(0,sw-size), maxY=Math.max(0,sh-size);
         float targetX=x+dx, targetY=y+dy;
         // At a screen edge, clamp the pointer and scroll for the part of the
         // movement that would otherwise carry it beyond the display.
@@ -113,7 +115,24 @@ public class MouseService extends Service {
     public int getPointerX(){return (int)x;} public int getPointerY(){return (int)y;}
     public void beginMoveHold(){moveHoldStart=System.currentTimeMillis();} public void endMoveHold(){moveHoldStart=0;}
     public long getMoveHoldTime(){return moveHoldStart==0?0:System.currentTimeMillis()-moveHoldStart;}
-    public float getMoveSpeedPx(){float d=getResources().getDisplayMetrics().density;return 20f*d;}
+    public float getMoveSpeedPx(){
+        float d=getResources().getDisplayMetrics().density;
+        int sensitivity=getSharedPreferences("mouse_settings",MODE_PRIVATE).getInt("sensitivity",5);
+        return 20f*d*(sensitivity/5.0f);
+    }
+    public int getPointerSizeDp(){return getSharedPreferences("mouse_settings",MODE_PRIVATE).getInt("pointer_size",42);}
+    private int pointerSizePx(){return dp(getPointerSizeDp());}
+    public void applyPointerSize(){
+        int size=pointerSizePx();
+        if(pointer!=null && wm!=null){
+            try { WindowManager.LayoutParams lp=(WindowManager.LayoutParams)pointer.getLayoutParams(); lp.width=size; lp.height=size; wm.updateViewLayout(pointer,lp); } catch(Exception ignored){}
+        }
+        MouseAccessibilityService.applyPointerSize(this);
+        int sw=getResources().getDisplayMetrics().widthPixels, sh=getResources().getDisplayMetrics().heightPixels;
+        x=Math.max(0,Math.min(Math.max(0,sw-size),x)); y=Math.max(0,Math.min(Math.max(0,sh-size),y));
+        if(pointer!=null && wm!=null){try{WindowManager.LayoutParams lp=(WindowManager.LayoutParams)pointer.getLayoutParams();lp.x=(int)x;lp.y=(int)y;wm.updateViewLayout(pointer,lp);}catch(Exception ignored){}}
+        if(MouseAccessibilityService.getInstance()!=null) MouseAccessibilityService.updatePointerPosition((int)x,(int)y,hidden);
+    }
     public void click(){MouseAccessibilityService.performClickAt((int)x,(int)y);}
 
     public void setScroll(boolean value){scroll=value; applyScrollAppearance(); Toast.makeText(this,scroll?"已开启固定滑动":"已关闭固定滑动",Toast.LENGTH_SHORT).show();}

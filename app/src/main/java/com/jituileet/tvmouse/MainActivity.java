@@ -13,7 +13,7 @@ import android.widget.*;
 public class MainActivity extends Activity {
     private LinearLayout root;
     private TextView status;
-    private Button enable, hide, customAppearance, language, overlay, accessibility, about;
+    private Button enable, hide, otherSettings, about;
     private String appliedLanguageMode;
 
     @Override protected void attachBaseContext(Context newBase) {
@@ -31,16 +31,13 @@ public class MainActivity extends Activity {
         root.addView(title(getString(R.string.title),30),new LinearLayout.LayoutParams(-1,dp(72)));
         status=title("",15);status.setTypeface(Typeface.DEFAULT,Typeface.NORMAL);root.addView(status,new LinearLayout.LayoutParams(-1,dp(52)));
 
-        enable=button(getString(R.string.toggle_mouse));hide=button(getString(R.string.hide_pointer));customAppearance=button(getString(R.string.custom_appearance));language=button(getString(R.string.language));overlay=button(getString(R.string.open_overlay));accessibility=button(getString(R.string.open_accessibility));about=button(getString(R.string.about));
-        addButton(enable);addButton(hide);addButton(customAppearance);addButton(language);addButton(overlay);addButton(accessibility);addButton(about);
+        enable=button(getString(R.string.toggle_mouse));hide=button(getString(R.string.hide_pointer));otherSettings=button(getString(R.string.other_settings));about=button(getString(R.string.about));
+        addButton(enable);addButton(hide);addButton(otherSettings);addButton(about);
         setContentView(sv);
 
         enable.setOnClickListener(v->toggleMouse());
         hide.setOnClickListener(v->{MouseService s=ServiceRegistry.get();if(s!=null)s.toggleHidden();else toast(getString(R.string.mouse_not_started));});
-        customAppearance.setOnClickListener(v->openMouseSettings(SettingsActivity.PAGE_APPEARANCE));
-        language.setOnClickListener(v->openMouseSettings(SettingsActivity.PAGE_LANGUAGE));
-        overlay.setOnClickListener(v->openOverlaySettings());
-        accessibility.setOnClickListener(v->openAccessibilitySettings());
+        otherSettings.setOnClickListener(v->openMouseSettings(null));
         about.setOnClickListener(v->showAbout());
         enable.requestFocus();updateStatus();
     }

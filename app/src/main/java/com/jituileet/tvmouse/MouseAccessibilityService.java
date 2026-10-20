@@ -212,7 +212,7 @@ public class MouseAccessibilityService extends AccessibilityService {
                 s.pointerView=new ImageView(s);
                 s.pointerView.setScaleType(ImageView.ScaleType.CENTER_INSIDE);
                 float d=owner.getResources().getDisplayMetrics().density;
-                int size=(int)(42*d+0.5f);
+                int size=(int)(owner.getPointerSizeDp()*d+0.5f);
                 s.pointerParams=new WindowManager.LayoutParams(size,size,
                     WindowManager.LayoutParams.TYPE_ACCESSIBILITY_OVERLAY,
                     WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE|WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE|
@@ -238,6 +238,16 @@ public class MouseAccessibilityService extends AccessibilityService {
             s.pointerView.setVisibility(hidden?View.GONE:View.VISIBLE);
             if(!hidden) s.pointerWm.updateViewLayout(s.pointerView,s.pointerParams);
         } catch (RuntimeException ignored) { s.removePointerInternal(); }
+    }
+
+    public static void applyPointerSize(MouseService owner){
+        MouseAccessibilityService s=instance;
+        if(s==null || s.pointerView==null || s.pointerWm==null || s.pointerParams==null || owner==null) return;
+        try {
+            int size=(int)(owner.getPointerSizeDp()*owner.getResources().getDisplayMetrics().density+0.5f);
+            s.pointerParams.width=size; s.pointerParams.height=size;
+            s.pointerWm.updateViewLayout(s.pointerView,s.pointerParams);
+        } catch(RuntimeException ignored) {}
     }
 
     public static void applyPointerAppearance(MouseService owner){

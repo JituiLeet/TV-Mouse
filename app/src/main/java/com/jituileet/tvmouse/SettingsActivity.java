@@ -18,6 +18,8 @@ public class SettingsActivity extends Activity {
     private boolean pickingFixedAppearance=false;
     private String previousGeneralAppearance="default";
     private LinearLayout box;
+    private FrameLayout screen;
+    private ScrollView panelScroll;
     private final int PANEL_DP = 430;
 
     @Override protected void attachBaseContext(Context newBase) {
@@ -29,14 +31,16 @@ public class SettingsActivity extends Activity {
         // Use a normal full-screen activity and draw the TV-style right-side panel ourselves.
         // This avoids translucent Holo window issues on some Android TV ROMs.
         getWindow().setBackgroundDrawableResource(android.R.color.transparent);
-        FrameLayout screen=new FrameLayout(this);
+        screen=new FrameLayout(this);
         screen.setBackgroundColor(Color.argb(175,16,17,20));
         box=new LinearLayout(this);
         box.setOrientation(LinearLayout.VERTICAL);
         box.setPadding(dp(22),dp(18),dp(16),dp(18));
         box.setBackgroundColor(Color.rgb(47,48,51));
+        panelScroll=new ScrollView(this); panelScroll.setFillViewport(true);
+        panelScroll.addView(box,new ScrollView.LayoutParams(-1,-2));
         FrameLayout.LayoutParams panel=new FrameLayout.LayoutParams(dp(PANEL_DP),-1,Gravity.RIGHT|Gravity.TOP);
-        screen.addView(box,panel);
+        screen.addView(panelScroll,panel);
         setContentView(screen);
         String page=getIntent().getStringExtra(EXTRA_PAGE);
         if(PAGE_APPEARANCE.equals(page)) showAppearancePanel();
@@ -46,16 +50,48 @@ public class SettingsActivity extends Activity {
 
     private void buildMainPanel() {
         box=new LinearLayout(this); box.setOrientation(LinearLayout.VERTICAL); box.setPadding(dp(22),dp(18),dp(16),dp(18)); box.setBackgroundColor(Color.rgb(47,48,51));
+        panelScroll.removeAllViews(); panelScroll.addView(box,new ScrollView.LayoutParams(-1,-2));
         TextView title=text(getString(R.string.mouse_settings),23,true); title.setGravity(Gravity.CENTER_VERTICAL);
         box.addView(title,new LinearLayout.LayoutParams(-1,dp(70)));
-        addRow("⌖",getString(R.string.hide_pointer),v->{MouseService s=ServiceRegistry.get();if(s!=null)s.toggleHidden();else toast(getString(R.string.mouse_not_started));});
+        addRow("➤",getString(R.string.mouse_sensitivity),v->showSensitivityDialog());
+        addRow("↗",getString(R.string.pointer_size),v->showPointerSizeDialog());
         addRow("✦",getString(R.string.custom_appearance),v->showAppearancePanel());
         addRow("文",getString(R.string.language),v->showLanguagePanel());
+        addRow("▣",getString(R.string.open_overlay),v->openOverlaySettings());
+        addRow("♿",getString(R.string.open_accessibility),v->openAccessibilitySettings());
         addRow("■",getString(R.string.close_mouse),v->{MouseService s=ServiceRegistry.get();if(s!=null)s.stopSelf();finish();});
         addRow("G",getString(R.string.github_project),v->openGithub());
-        setContentView(box);
+        addRow("ⓘ",getString(R.string.about),v->startActivity(new Intent(this,AboutActivity.class)));
+        setContentView(screen);
         if(box.getChildCount()>1) box.getChildAt(1).requestFocus();
     }
+
+    private void showSensitivityDialog() {
+        final int current=getSharedPreferences("mouse_settings",MODE_PRIVATE).getInt("sensitivity",5);
+        LinearLayout content=new LinearLayout(this); content.setOrientation(LinearLayout.VERTICAL); content.setPadding(dp(24),dp(8),dp(24),dp(8));
+        TextView value=text(getString(R.string.sensitivity_value,current),16,false); value.setGravity(Gravity.CENTER);
+        SeekBar seek=new SeekBar(this); seek.setMax(9); seek.setProgress(current-1);
+        content.addView(value,new LinearLayout.LayoutParams(-1,dp(36))); content.addView(seek,new LinearLayout.LayoutParams(-1,dp(48)));
+        seek.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener(){public void onProgressChanged(SeekBar b,int progress,boolean fromUser){value.setText(getString(R.string.sensitivity_value,progress+1));} public void onStartTrackingTouch(SeekBar b){} public void onStopTrackingTouch(SeekBar b){}});
+        new AlertDialog.Builder(this).setTitle(R.string.mouse_sensitivity).setView(content)
+            .setPositiveButton(R.string.save,(d,w)->getSharedPreferences("mouse_settings",MODE_PRIVATE).edit().putInt("sensitivity",seek.getProgress()+1).apply())
+            .setNegativeButton(R.string.cancel,null).show();
+    }
+
+    private void showPointerSizeDialog() {
+        final int current=getSharedPreferences("mouse_settings",MODE_PRIVATE).getInt("pointer_size",42);
+        LinearLayout content=new LinearLayout(this); content.setOrientation(LinearLayout.VERTICAL); content.setPadding(dp(24),dp(8),dp(24),dp(8));
+        TextView value=text(getString(R.string.pointer_size_value,current),16,false); value.setGravity(Gravity.CENTER);
+        SeekBar seek=new SeekBar(this); seek.setMax(56); seek.setProgress(Math.max(0,Math.min(56,current-24)));
+        content.addView(value,new LinearLayout.LayoutParams(-1,dp(36))); content.addView(seek,new LinearLayout.LayoutParams(-1,dp(48)));
+        seek.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener(){public void onProgressChanged(SeekBar b,int progress,boolean fromUser){value.setText(getString(R.string.pointer_size_value,progress+24));} public void onStartTrackingTouch(SeekBar b){} public void onStopTrackingTouch(SeekBar b){}});
+        new AlertDialog.Builder(this).setTitle(R.string.pointer_size).setView(content)
+            .setPositiveButton(R.string.save,(d,w)->{getSharedPreferences("mouse_settings",MODE_PRIVATE).edit().putInt("pointer_size",seek.getProgress()+24).apply();MouseService ms=ServiceRegistry.get();if(ms!=null)ms.applyPointerSize();})
+            .setNegativeButton(R.string.cancel,null).show();
+    }
+
+    private void openOverlaySettings(){try{if(Build.VERSION.SDK_INT>=23)startActivity(new Intent(android.provider.Settings.ACTION_MANAGE_OVERLAY_PERMISSION,Uri.parse("package:"+getPackageName())));else toast(getString(R.string.overlay_not_required));}catch(Exception e){startActivity(new Intent(android.provider.Settings.ACTION_SETTINGS));}}
+    private void openAccessibilitySettings(){try{startActivity(new Intent(android.provider.Settings.ACTION_ACCESSIBILITY_SETTINGS));}catch(Exception e){toast(getString(R.string.cannot_open_settings));}}
 
     private void showLanguagePanel() {
         box.removeAllViews();

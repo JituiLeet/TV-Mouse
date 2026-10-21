@@ -3,7 +3,7 @@
     <string name="title">TV Mouse</string>
     <string name="toggle_mouse">Enable / Disable Mouse Pointer</string>
     <string name="hide_pointer">Hide / Show Mouse Pointer</string>
-    <string name="other_settings">Other Settings</string>
+    <string name="other_settings">More Settings</string>
     <string name="mouse_sensitivity">Mouse Sensitivity</string>
     <string name="sensitivity_value">Sensitivity: %1$d</string>
     <string name="pointer_size">Mouse Pointer Size</string>
@@ -58,32 +58,23 @@
     <string name="cannot_open_link">Unable to open link</string>
     <string name="ok">OK</string>
     <string name="about_title">Help</string>
-    <string name="about_message">Core features:
-
-• Move the pointer with the TV remote D-pad and hold a direction for continuous movement. Adjust sensitivity and pointer size in Other Settings.
-• Press OK to click; hold OK to perform a long press.
-• When the pointer hovers over a clickable link or interactive control, it switches to the index-finger Link Select cursor and shows a hover highlight.
-• In Other Settings → Shortcut Settings, configure single-key triggers, multi-key combinations, or a timed hold for opening settings and enabling Fixed Scroll.
-• Fixed Scroll can be enabled with its configurable shortcut; once active, hold Back for 3 seconds to turn it off.
-• Normal, Fixed Scroll, and Link Select pointers can each share the normal appearance or use an independent appearance.
-• If the accessibility service encounters an error, it attempts to clear key filtering when stopped. If the remote still does not respond, disable TV Mouse in system Accessibility settings, then enable it again.
-• Supports Simplified Chinese and English.</string>
+    <string name="about_message">Core features:\n\n• Move the pointer with the TV remote D-pad; hold a direction key for continuous movement. Adjust sensitivity and pointer size in Other Settings.\n• Press OK to click; hold OK for a long press.\n• At screen edges, the pointer stays in place and scrolls in that direction.\n• In Other Settings, Shortcut Settings lets you configure button combinations or a single held button and its trigger duration for opening settings, enabling Fixed Scroll, and hiding/showing the pointer. By default, Volume Up + Menu opens settings and Volume Down + Menu enables Fixed Scroll. Hold Back for 3 seconds to close Fixed Scroll.\n• If the accessibility service is interrupted or encounters an exception, key filtering is disabled where possible to avoid leaving remote keys blocked.\n• Customize separate pointer appearances for normal and Fixed Scroll modes, or share one appearance.\n• Supports Simplified Chinese and English.</string>
     <string name="accessibility_hint">TV Mouse accessibility service for controlling the mouse pointer and performing clicks, long presses, and scrolling.</string>
+
     <string name="shortcut_settings">Shortcut Settings</string>
-    <string name="shortcut_open_settings">Open Settings Shortcut</string>
-    <string name="shortcut_fixed_scroll">Enable Fixed Scroll Shortcut</string>
-    <string name="shortcut_combination">Press one or more keys</string>
-    <string name="shortcut_long_press">Hold a specific key</string>
-    <string name="shortcut_choose_keys">Choose combination keys</string>
-    <string name="shortcut_choose_hold_key">Choose hold key</string>
-    <string name="shortcut_hold_duration">Hold duration: %1$d ms</string>
-    <string name="shortcut_saved">Shortcut saved</string>
-    <string name="pointer_schemes">Pointer Appearance Schemes</string>
-    <string name="normal_pointer">Normal Mouse Pointer</string>
-    <string name="fixed_pointer">Fixed Scroll Pointer</string>
-    <string name="link_pointer">Link Select Pointer</string>
-    <string name="share_appearance">Share normal pointer appearance</string>
-    <string name="individual_appearance">Choose an independent appearance</string>
-    <string name="hover_feedback">Hover feedback</string>
-    <string name="shortcut_instructions">Choose a multi-key combination or hold a specific key for each action, and adjust the hold duration.</string>
+    <string name="shortcut_open_settings">Open Settings</string>
+    <string name="shortcut_enable_scroll">Enable Fixed Scroll</string>
+    <string name="shortcut_toggle_visibility">Hide / Show Mouse Pointer</string>
+    <string name="shortcut_combo">Press one or more buttons</string>
+    <string name="shortcut_hold">Hold one button</string>
+    <string name="shortcut_capture_combo">Press the remote keys to combine (up to 3), then press OK to finish.</string>
+    <string name="shortcut_capture_one">Press the remote key to hold, then press OK to finish.</string>
+    <string name="shortcut_capture_done">Done</string>
+    <string name="shortcut_capture_empty">Press at least one key first</string>
+    <string name="shortcut_captured">Recorded: %1$s</string>
+    <string name="shortcut_hold_seconds">Hold duration: %1$d seconds</string>
+    <string name="shortcut_hold_duration">Set hold duration</string>
+    <string name="shortcut_error">Unable to save shortcut</string>
+
+    <string name="shortcut_hold_description">Hold %1$s for %2$d seconds</string>
 </resources>

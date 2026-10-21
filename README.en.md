@@ -7,19 +7,18 @@ Control the mouse pointer on Android TV with a remote and operate other apps lik
 ## Features
 
 - Floating mouse pointer: move with the D-pad, click with OK, and hold OK to perform a long press.
-- Pointer sensitivity and size controls in Other Settings.
-- Simplified main screen with only Enable/Disable Pointer, Hide/Show Pointer, and Other Settings.
+- Pointer sensitivity and size controls in More Settings.
+- Simplified main screen with only Enable/Disable Pointer, Hide/Show Pointer, and More Settings.
 - Fixed Scroll: press Volume Down + Menu to enable it. Once enabled, it can only be disabled by holding Back for 3 seconds.
-- Shortcut Settings: configure single-key triggers, multi-key combinations, or timed key holds for opening settings and enabling Fixed Scroll.
-- Hover feedback: hovering over clickable links or interactive controls shows a highlight and switches to the index-finger Link Select cursor.
-- Custom pointer appearances: import 128 × 128 pixel PNG or JPG images, rename or delete them. Normal, Fixed Scroll, and Link Select pointers can each share the normal appearance or use an independent one.
+- Shortcut Settings: configure button combinations or a held button and trigger duration for opening settings, enabling Fixed Scroll, and hiding/showing the pointer. Defaults: Volume Up + Menu opens settings; Volume Down + Menu enables Fixed Scroll.
+- Custom pointer appearances: import 128 × 128 pixel PNG or JPG images, set an appearance as the pointer, rename it, or delete it. Normal and Fixed Scroll modes can share an appearance.
 - Chinese and English interfaces, following the system language by default with manual switching available.
 
 ## Usage
 
-Grant overlay and accessibility permissions before enabling the mouse. The main screen provides pointer enable/disable, hide/show, and Other Settings. Other Settings includes sensitivity, pointer size, appearance, language, and permission shortcuts.
+Grant overlay and accessibility permissions before enabling the mouse. The main screen provides pointer enable/disable, hide/show, and More Settings. More Settings includes sensitivity, pointer size, appearance, language, and permission shortcuts.
 
-Customize triggers in Other Settings → Shortcut Settings, including single keys, multi-key combinations, and timed holds. While Fixed Scroll is active, hold Back for 3 seconds to disable it. If the remote stops responding after an accessibility-service error, disable TV Mouse in system Accessibility settings and enable it again.
+By default, press Volume Up + Menu to open settings and Volume Down + Menu to enable Fixed Scroll. While active, hold Back for 3 seconds to disable it. Customize shortcuts in More Settings → Shortcut Settings. If the accessibility service is interrupted or encounters an exception, the app attempts to disable key filtering to reduce the risk of remote keys remaining blocked.
 
 
 ## Compatibility

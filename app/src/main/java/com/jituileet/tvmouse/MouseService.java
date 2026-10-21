@@ -14,7 +14,7 @@ public class MouseService extends Service {
     private WindowManager wm;
     private ImageView pointer;
     private float x=500,y=300;
-    private boolean scroll=false,hidden=false,linkHovered=false;
+    private boolean scroll=false,hidden=false;
     private long moveHoldStart;
     private final float density;
 
@@ -78,8 +78,8 @@ public class MouseService extends Service {
         if(pointer!=null){
             // Always switch the built-in cursor too; previously fixed-scroll mode
             // fell back to the normal cursor whenever no custom fixed image existed.
-            pointer.setImageResource(linkHovered ? R.drawable.ic_link_select : (scroll ? R.drawable.ic_scroll_pointer : R.drawable.ic_mouse_pointer));
-            File f=linkHovered ? AppearanceManager.selectedLinkFile(this) : (scroll ? AppearanceManager.selectedFixedFile(this) : AppearanceManager.selectedFile(this));
+            pointer.setImageResource(scroll ? R.drawable.ic_scroll_pointer : R.drawable.ic_mouse_pointer);
+            File f=scroll ? AppearanceManager.selectedFixedFile(this) : AppearanceManager.selectedFile(this);
             if(f!=null){
                 BitmapFactory.Options o=new BitmapFactory.Options();o.inScaled=false;
                 Bitmap b=BitmapFactory.decodeFile(f.getAbsolutePath(),o);
@@ -110,7 +110,7 @@ public class MouseService extends Service {
         if(!hidden&&pointer!=null && MouseAccessibilityService.getInstance()==null){
             WindowManager.LayoutParams p=(WindowManager.LayoutParams)pointer.getLayoutParams();p.x=(int)x;p.y=(int)y;wm.updateViewLayout(pointer,p);
         }
-        if(MouseAccessibilityService.getInstance()!=null) { MouseAccessibilityService.updatePointerPosition((int)x,(int)y,hidden); MouseAccessibilityService.updateHoverAt((int)(x+dp(8)),(int)(y+dp(3))); }
+        if(MouseAccessibilityService.getInstance()!=null) MouseAccessibilityService.updatePointerPosition((int)x,(int)y,hidden);
     }
     public int getPointerX(){return (int)x;} public int getPointerY(){return (int)y;}
     public void beginMoveHold(){moveHoldStart=System.currentTimeMillis();} public void endMoveHold(){moveHoldStart=0;}
@@ -131,9 +131,8 @@ public class MouseService extends Service {
         int sw=getResources().getDisplayMetrics().widthPixels, sh=getResources().getDisplayMetrics().heightPixels;
         x=Math.max(0,Math.min(Math.max(0,sw-size),x)); y=Math.max(0,Math.min(Math.max(0,sh-size),y));
         if(pointer!=null && wm!=null){try{WindowManager.LayoutParams lp=(WindowManager.LayoutParams)pointer.getLayoutParams();lp.x=(int)x;lp.y=(int)y;wm.updateViewLayout(pointer,lp);}catch(Exception ignored){}}
-        if(MouseAccessibilityService.getInstance()!=null) { MouseAccessibilityService.updatePointerPosition((int)x,(int)y,hidden); MouseAccessibilityService.updateHoverAt((int)(x+dp(8)),(int)(y+dp(3))); }
+        if(MouseAccessibilityService.getInstance()!=null) MouseAccessibilityService.updatePointerPosition((int)x,(int)y,hidden);
     }
-    public void setLinkHovered(boolean value){ if(linkHovered==value)return; linkHovered=value; applyAppearance(); }
     public void click(){MouseAccessibilityService.performClickAt((int)x,(int)y);}
 
     public void setScroll(boolean value){scroll=value; applyScrollAppearance(); Toast.makeText(this,scroll?"已开启固定滑动":"已关闭固定滑动",Toast.LENGTH_SHORT).show();}
@@ -150,11 +149,10 @@ public class MouseService extends Service {
     public void toggleHidden(){
         hidden=!hidden;
         if(pointer!=null) pointer.setVisibility(hidden?View.GONE:(MouseAccessibilityService.getInstance()==null?View.VISIBLE:View.GONE));
-        if(MouseAccessibilityService.getInstance()!=null) { MouseAccessibilityService.updatePointerPosition((int)x,(int)y,hidden); MouseAccessibilityService.updateHoverAt((int)(x+dp(8)),(int)(y+dp(3))); }
+        if(MouseAccessibilityService.getInstance()!=null) MouseAccessibilityService.updatePointerPosition((int)x,(int)y,hidden);
         Toast.makeText(this,hidden?"鼠标指针已隐藏":"鼠标指针已显示",Toast.LENGTH_SHORT).show();
     }
     public boolean isHidden(){return hidden;}
-    public boolean isLinkHovered(){return linkHovered;}
 
     public void showTvPanel(){
         Intent i=new Intent(this,SettingsActivity.class);i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);startActivity(i);

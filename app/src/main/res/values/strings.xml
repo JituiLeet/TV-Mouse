@@ -3,7 +3,7 @@
     <string name="title">电视鼠标</string>
     <string name="toggle_mouse">开启 / 关闭鼠标指针</string>
     <string name="hide_pointer">隐藏 / 显示鼠标指针</string>
-    <string name="other_settings">其他设置</string>
+    <string name="other_settings">更多设置</string>
     <string name="mouse_sensitivity">鼠标灵敏度</string>
     <string name="sensitivity_value">灵敏度：%1$d</string>
     <string name="pointer_size">鼠标指针大小</string>
@@ -58,32 +58,23 @@
     <string name="cannot_open_link">无法打开链接</string>
     <string name="ok">知道了</string>
     <string name="about_title">说明</string>
-    <string name="about_message">核心功能：
-
-• 使用电视遥控器方向键移动鼠标指针，按住方向键可连续移动；可在“其他设置”中调整鼠标灵敏度与指针大小。
-• 确定键可执行单击，长按确定键可执行长按。
-• 指针悬停在可点击链接或交互控件上时，会切换为伸出食指的 Link Select 手形指针，并显示悬停反馈。
-• 在“其他设置 → 快捷键设置”中，可为打开设置、开启固定滑动配置单键、多键组合或长按指定按键，并调整长按时长。
-• 固定滑动可由自定义快捷键开启；开启后只能长按返回键 3 秒关闭。
-• 普通指针、固定滑动指针和 Link Select 指针可分别共用普通外观或单独选择外观。
-• 若无障碍服务发生异常，服务停止时会尝试撤销按键过滤；仍无法操作时可先从系统无障碍设置关闭“电视鼠标”服务，再重新开启。
-• 支持简体中文与 English.</string>
+    <string name="about_message">核心功能：\n\n• 使用电视遥控器方向键移动鼠标指针，按住方向键可连续移动；可在“其他设置”中调整鼠标灵敏度与指针大小。\n• 确定键可执行单击，长按确定键可执行长按。\n• 鼠标指针到达屏幕边缘时会停在原地，并沿该方向滑动界面。\n• 在“其他设置”中的“快捷键设置”可以为打开设置、开启固定滑动、隐藏/显示指针配置组合按键或长按按键及触发时间。默认音量加 + 菜单键打开设置，音量减 + 菜单键开启固定滑动；固定滑动开启后长按返回键 3 秒关闭。\n• 无障碍服务中断或发生异常时会尽量关闭按键过滤，避免遥控器按键被持续拦截；重新连接服务后可恢复鼠标控制。\n• 普通状态与“固定滑动”可分别自定义鼠标指针，也可共用同一外观。\n• 支持简体中文与 English。</string>
     <string name="accessibility_hint">电视鼠标无障碍服务，用于控制鼠标指针并执行点击、长按和滑动操作。</string>
+
     <string name="shortcut_settings">快捷键设置</string>
-    <string name="shortcut_open_settings">打开设置快捷键</string>
-    <string name="shortcut_fixed_scroll">开启固定滑动快捷键</string>
-    <string name="shortcut_combination">按下一个或多个按钮</string>
-    <string name="shortcut_long_press">长按指定按钮</string>
-    <string name="shortcut_choose_keys">选择组合按键</string>
-    <string name="shortcut_choose_hold_key">选择长按按键</string>
-    <string name="shortcut_hold_duration">长按时长：%1$d 毫秒</string>
-    <string name="shortcut_saved">快捷键已保存</string>
-    <string name="pointer_schemes">指针外观方案</string>
-    <string name="normal_pointer">普通鼠标指针</string>
-    <string name="fixed_pointer">固定滑动指针</string>
-    <string name="link_pointer">链接选择（Link Select）</string>
-    <string name="share_appearance">共用普通指针外观</string>
-    <string name="individual_appearance">单独选择外观</string>
-    <string name="hover_feedback">悬停反馈</string>
-    <string name="shortcut_instructions">为每项功能选择多键组合或长按单个按键，并可调整长按时长。</string>
+    <string name="shortcut_open_settings">打开设置</string>
+    <string name="shortcut_enable_scroll">开启固定滑动</string>
+    <string name="shortcut_toggle_visibility">隐藏 / 显示鼠标指针</string>
+    <string name="shortcut_combo">按下一个或多个按钮</string>
+    <string name="shortcut_hold">长按一个按钮</string>
+    <string name="shortcut_capture_combo">请依次按下要组合使用的遥控器按键（最多 3 个），按确定键完成。</string>
+    <string name="shortcut_capture_one">请按下要长按触发的遥控器按键，然后按确定键完成。</string>
+    <string name="shortcut_capture_done">完成</string>
+    <string name="shortcut_capture_empty">请先按下至少一个按键</string>
+    <string name="shortcut_captured">已记录：%1$s</string>
+    <string name="shortcut_hold_seconds">长按时间：%1$d 秒</string>
+    <string name="shortcut_hold_duration">设置长按触发时间</string>
+    <string name="shortcut_error">快捷键设置失败</string>
+
+    <string name="shortcut_hold_description">长按 %1$s %2$d 秒</string>
 </resources>

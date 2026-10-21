@@ -15,6 +15,12 @@ import android.view.accessibility.AccessibilityEvent;
 import android.view.accessibility.AccessibilityNodeInfo;
 import android.view.KeyEvent;
 import android.view.ViewConfiguration;
+import android.view.KeyEvent;
+import android.widget.FrameLayout;
+import android.graphics.Color;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 
 public class MouseAccessibilityService extends AccessibilityService {
     private static MouseAccessibilityService instance;
@@ -27,8 +33,13 @@ public class MouseAccessibilityService extends AccessibilityService {
     private Runnable backLongPress;
     private boolean backKeyTracking;
     private boolean backLongPressTriggered;
-    private int volumeKeyHeld = 0;
-    private boolean menuHeld, comboTriggered;
+    private final Set<Integer> shortcutKeysDown = new HashSet<>();
+    private boolean settingsShortcutTriggered, fixedShortcutTriggered;
+    private Runnable settingsHoldRunnable, fixedHoldRunnable;
+    private View hoverHighlight;
+    private WindowManager.LayoutParams hoverParams;
+    private AccessibilityNodeInfo hoveredNode;
+    private long lastHoverFocusAt;
     private WindowManager pointerWm;
     private ImageView pointerView;
     private WindowManager.LayoutParams pointerParams;
@@ -52,100 +63,122 @@ public class MouseAccessibilityService extends AccessibilityService {
     public static void setKeyFilteringEnabled(boolean enabled) {
         MouseAccessibilityService s = instance;
         if (s == null) return;
-        AccessibilityServiceInfo info = s.getServiceInfo();
-        if (info == null) return;
-        if (enabled) info.flags |= AccessibilityServiceInfo.FLAG_REQUEST_FILTER_KEY_EVENTS;
-        else info.flags &= ~AccessibilityServiceInfo.FLAG_REQUEST_FILTER_KEY_EVENTS;
-        info.flags |= AccessibilityServiceInfo.FLAG_RETRIEVE_INTERACTIVE_WINDOWS;
-        s.setServiceInfo(info);
+        try {
+            AccessibilityServiceInfo info = s.getServiceInfo();
+            if (info == null) return;
+            if (enabled) info.flags |= AccessibilityServiceInfo.FLAG_REQUEST_FILTER_KEY_EVENTS;
+            else info.flags &= ~AccessibilityServiceInfo.FLAG_REQUEST_FILTER_KEY_EVENTS;
+            // Interactive windows are retrieved through the service XML config;
+            // do not mutate unrelated flags while toggling key filtering.
+            s.setServiceInfo(info);
+        } catch (RuntimeException ignored) {
+            // Fail open if the platform rejects a runtime service-info update.
+        }
     }
 
     @Override public boolean onKeyEvent(KeyEvent e) {
-        int k = e.getKeyCode();
-        boolean down = e.getAction() == KeyEvent.ACTION_DOWN;
-        boolean up = e.getAction() == KeyEvent.ACTION_UP;
-        MouseService ms = ServiceRegistry.get();
+        try { return handleKeyEventSafely(e); }
+        catch (RuntimeException ignored) {
+            // Fail open: a malformed node/window state must not lock the remote.
+            return false;
+        }
+    }
 
-        // When the mouse service is not running, this accessibility service must
-        // not handle any remote-control key.
-        if (ms == null) return false;
+    private boolean handleKeyEventSafely(KeyEvent e) {
+        int k=e.getKeyCode();
+        boolean down=e.getAction()==KeyEvent.ACTION_DOWN, up=e.getAction()==KeyEvent.ACTION_UP;
+        MouseService ms=ServiceRegistry.get();
+        if(ms==null) return false;
 
-        // Observe Back only while Fixed Scroll is active. Short presses are
-        // passed through untouched; consume only the release of a 3-second hold.
-        if (k == KeyEvent.KEYCODE_BACK) {
-            if (down && e.getRepeatCount() == 0 && ms.isScroll()) {
-                backKeyTracking = true;
-                backLongPressTriggered = false;
-                if (backLongPress != null) handler.removeCallbacks(backLongPress);
-                backLongPress = new Runnable() {
-                    @Override public void run() {
-                        MouseService current = ServiceRegistry.get();
-                        if (backKeyTracking && current != null && current.isScroll()) {
-                            backLongPressTriggered = true;
-                            current.setScroll(false);
-                        }
+        // Back remains an ordinary Android Back key unless fixed-scroll is active.
+        if(k==KeyEvent.KEYCODE_BACK && (ms.isScroll() ||
+            !(ShortcutConfig.mode(this,"settings")==ShortcutConfig.LONG_PRESS && ShortcutConfig.holdKey(this,"settings")==k) &&
+            !(ShortcutConfig.mode(this,"fixed")==ShortcutConfig.LONG_PRESS && ShortcutConfig.holdKey(this,"fixed")==k))){
+            if(down && e.getRepeatCount()==0 && ms.isScroll()){
+                backKeyTracking=true; backLongPressTriggered=false;
+                if(backLongPress!=null)handler.removeCallbacks(backLongPress);
+                backLongPress=()->{
+                    MouseService current=ServiceRegistry.get();
+                    if(backKeyTracking && current!=null && current.isScroll()){
+                        backLongPressTriggered=true; current.setScroll(false);
                     }
                 };
-                handler.postDelayed(backLongPress, 3000);
-                return false;
+                handler.postDelayed(backLongPress,3000); return false;
             }
-            if (up && backKeyTracking) {
-                if (backLongPress != null) handler.removeCallbacks(backLongPress);
-                backLongPress = null;
-                backKeyTracking = false;
-                boolean consume = backLongPressTriggered;
-                backLongPressTriggered = false;
-                return consume;
-            }
-            // Do not monitor or intercept Back outside Fixed Scroll mode.
-            return false;
-        }
-
-        if (k == KeyEvent.KEYCODE_VOLUME_UP || k == KeyEvent.KEYCODE_VOLUME_DOWN || k == KeyEvent.KEYCODE_MENU) {
-            if (down) {
-                if (k == KeyEvent.KEYCODE_MENU) menuHeld = true;
-                else volumeKeyHeld = k;
-                if (menuHeld && volumeKeyHeld != 0 && !comboTriggered) {
-                    comboTriggered = true;
-                    if (volumeKeyHeld == KeyEvent.KEYCODE_VOLUME_UP) ms.showTvPanel();
-                    else if (volumeKeyHeld == KeyEvent.KEYCODE_VOLUME_DOWN && !ms.isScroll()) ms.setScroll(true);
-                }
-                // Always consume Menu itself. Otherwise Android TV launchers may
-                // handle a lone Menu press before the second combo key arrives.
-                if (k == KeyEvent.KEYCODE_MENU || (menuHeld && volumeKeyHeld != 0)) return true;
-            } else if (up) {
-                boolean combo = menuHeld && volumeKeyHeld != 0;
-                if (k == KeyEvent.KEYCODE_MENU) menuHeld = false;
-                else if (volumeKeyHeld == k) volumeKeyHeld = 0;
-                if (!menuHeld || volumeKeyHeld == 0) comboTriggered = false;
-                if (k == KeyEvent.KEYCODE_MENU || combo) return true;
+            if(up && backKeyTracking){
+                if(backLongPress!=null)handler.removeCallbacks(backLongPress);
+                backLongPress=null; backKeyTracking=false;
+                boolean consume=backLongPressTriggered; backLongPressTriggered=false; return consume;
             }
             return false;
         }
 
-        if (k == KeyEvent.KEYCODE_DPAD_UP || k == KeyEvent.KEYCODE_DPAD_DOWN ||
-            k == KeyEvent.KEYCODE_DPAD_LEFT || k == KeyEvent.KEYCODE_DPAD_RIGHT) {
-            if (down) { startMove(k); return true; }
-            if (up) { stopMove(k); return true; }
+        if(down && e.getRepeatCount()==0){
+            shortcutKeysDown.add(k);
+            checkCombinationShortcut(ms,"settings");
+            checkCombinationShortcut(ms,"fixed");
+            scheduleHoldShortcut(ms,"settings",k);
+            scheduleHoldShortcut(ms,"fixed",k);
         }
+        if(up){
+            shortcutKeysDown.remove(k);
+            if(settingsHoldRunnable!=null && ShortcutConfig.holdKey(this,"settings")==k){handler.removeCallbacks(settingsHoldRunnable);settingsHoldRunnable=null;}
+            if(fixedHoldRunnable!=null && ShortcutConfig.holdKey(this,"fixed")==k){handler.removeCallbacks(fixedHoldRunnable);fixedHoldRunnable=null;}
+            settingsShortcutTriggered=false; fixedShortcutTriggered=false;
+        }
+        // Menu is consumed while the pointer is running so the launcher cannot
+        // treat a partial shortcut as a standalone Menu action. Configured keys
+        // are consumed only as part of shortcut handling.
+        if(k==KeyEvent.KEYCODE_MENU || isConfiguredShortcutKey(k)) return true;
 
-        if (k == KeyEvent.KEYCODE_DPAD_CENTER || k == KeyEvent.KEYCODE_ENTER) {
-            if (down && e.getRepeatCount() == 0) {
-                centerDownAt = System.currentTimeMillis(); longPressSent = false; cancelLongPress();
-                longPress = new Runnable() { @Override public void run() {
-                    if (centerDownAt != 0) { longPressSent = true; performLongClickAt(currentX(), currentY()); }
-                }};
-                handler.postDelayed(longPress, ViewConfiguration.getLongPressTimeout());
-                return true;
+        if(k==KeyEvent.KEYCODE_DPAD_UP || k==KeyEvent.KEYCODE_DPAD_DOWN ||
+           k==KeyEvent.KEYCODE_DPAD_LEFT || k==KeyEvent.KEYCODE_DPAD_RIGHT){
+            if(down){startMove(k);return true;} if(up){stopMove(k);return true;}
+        }
+        if(k==KeyEvent.KEYCODE_DPAD_CENTER || k==KeyEvent.KEYCODE_ENTER){
+            if(down && e.getRepeatCount()==0){
+                centerDownAt=System.currentTimeMillis();longPressSent=false;cancelLongPress();
+                longPress=()->{if(centerDownAt!=0){longPressSent=true;performLongClickAt(currentX(),currentY());}};
+                handler.postDelayed(longPress,ViewConfiguration.getLongPressTimeout());return true;
             }
-            if (up) {
-                cancelLongPress();
-                if (!longPressSent) performClickAt(currentX(), currentY());
-                centerDownAt = 0; longPressSent = false; return true;
-            }
+            if(up){cancelLongPress();if(!longPressSent)performClickAt(currentX(),currentY());centerDownAt=0;longPressSent=false;return true;}
             return true;
         }
         return false;
+    }
+
+    private boolean isConfiguredShortcutKey(int key){
+        for(String action:new String[]{"settings","fixed"}){
+            if(ShortcutConfig.mode(this,action)==ShortcutConfig.LONG_PRESS && ShortcutConfig.holdKey(this,action)==key)return true;
+            if(ShortcutConfig.keys(this,action).contains(key))return true;
+        }
+        return false;
+    }
+
+    private void checkCombinationShortcut(MouseService ms,String action){
+        if(ShortcutConfig.mode(this,action)!=ShortcutConfig.COMBINATION)return;
+        List<Integer> required=ShortcutConfig.keys(this,action);if(required.isEmpty())return;
+        if(!shortcutKeysDown.containsAll(required))return;
+        if("settings".equals(action)){
+            if(!settingsShortcutTriggered){settingsShortcutTriggered=true;ms.showTvPanel();}
+        }else if(!fixedShortcutTriggered && !ms.isScroll()){
+            fixedShortcutTriggered=true;ms.setScroll(true);
+        }
+    }
+
+    private void scheduleHoldShortcut(MouseService ms,String action,int key){
+        if(ShortcutConfig.mode(this,action)!=ShortcutConfig.LONG_PRESS || ShortcutConfig.holdKey(this,action)!=key)return;
+        final Runnable task;
+        if("settings".equals(action)){
+            if(settingsHoldRunnable!=null)handler.removeCallbacks(settingsHoldRunnable);
+            task=()->{if(shortcutKeysDown.contains(key)){settingsShortcutTriggered=true;MouseService current=ServiceRegistry.get();if(current!=null)current.showTvPanel();}};
+            settingsHoldRunnable=task;
+        }else{
+            if(fixedHoldRunnable!=null)handler.removeCallbacks(fixedHoldRunnable);
+            task=()->{if(shortcutKeysDown.contains(key)){fixedShortcutTriggered=true;MouseService current=ServiceRegistry.get();if(current!=null&&!current.isScroll())current.setScroll(true);}};
+            fixedHoldRunnable=task;
+        }
+        handler.postDelayed(task,ShortcutConfig.holdMs(this,action));
     }
 
     private int currentX() { MouseService s=ServiceRegistry.get(); return s==null?1:s.getPointerX(); }
@@ -257,16 +290,83 @@ public class MouseAccessibilityService extends AccessibilityService {
             boolean fixed=owner.isScroll();
             // Fixed-scroll mode has its own built-in cursor even when no custom
             // fixed appearance has been selected.
-            s.pointerView.setImageResource(fixed ? R.drawable.ic_scroll_pointer : R.drawable.ic_mouse_pointer);
+            s.pointerView.setImageResource(owner.isLinkHovered() ? R.drawable.ic_link_select : (fixed ? R.drawable.ic_scroll_pointer : R.drawable.ic_mouse_pointer));
             // When fixed mode shares the normal appearance, keep the distinct
             // built-in scroll cursor visible instead of reapplying the normal image.
-            File f = fixed ? AppearanceManager.selectedFixedFile(owner) : AppearanceManager.selectedFile(owner);
+            File f = owner.isLinkHovered() ? AppearanceManager.selectedLinkFile(owner) : (fixed ? AppearanceManager.selectedFixedFile(owner) : AppearanceManager.selectedFile(owner));
             if(f!=null){
                 BitmapFactory.Options o=new BitmapFactory.Options(); o.inScaled=false;
                 android.graphics.Bitmap b=BitmapFactory.decodeFile(f.getAbsolutePath(),o);
                 if(b!=null) s.pointerView.setImageBitmap(b);
             }
         } catch (RuntimeException ignored) {}
+    }
+
+    public static void updateHoverAt(int x,int y){
+        MouseAccessibilityService s=instance;if(s==null)return;
+        try{s.updateHoverInternal(x,y);}catch(RuntimeException ignored){s.clearHoverInternal();}
+    }
+
+    private void updateHoverInternal(int x,int y){
+        AccessibilityNodeInfo root=getRootInActiveWindow();
+        if(root==null){clearHoverInternal();return;}
+        AccessibilityNodeInfo hit=findInteractiveNode(root,x,y);
+        root.recycle();
+        boolean interactive=hit!=null;
+        MouseService owner=ServiceRegistry.get();
+        if(owner!=null)owner.setLinkHovered(interactive);
+        if(!interactive){if(hit!=null)hit.recycle();clearHoverInternal();return;}
+        Rect bounds=new Rect();hit.getBoundsInScreen(bounds);
+        if(hoveredNode!=null)try{hoveredNode.recycle();}catch(Exception ignored){}
+        hoveredNode=AccessibilityNodeInfo.obtain(hit);hit.recycle();
+        showHoverHighlight(bounds);
+    }
+
+    private AccessibilityNodeInfo findInteractiveNode(AccessibilityNodeInfo node,int x,int y){
+        return findInteractiveNode(node,x,y,0);
+    }
+    private AccessibilityNodeInfo findInteractiveNode(AccessibilityNodeInfo node,int x,int y,int depth){
+        if(node==null || depth>24)return null;
+        Rect r=new Rect();node.getBoundsInScreen(r);if(!r.contains(x,y))return null;
+        for(int i=node.getChildCount()-1;i>=0;i--){
+            AccessibilityNodeInfo child=node.getChild(i);if(child==null)continue;
+            AccessibilityNodeInfo found=findInteractiveNode(child,x,y,depth+1);
+            child.recycle();if(found!=null)return found;
+        }
+        boolean interactive=node.isClickable() || node.isLongClickable() || node.isCheckable();
+        if(interactive)return AccessibilityNodeInfo.obtain(node);
+        return null;
+    }
+
+    private void showHoverHighlight(Rect r){
+        if(r.width()<=0||r.height()<=0)return;
+        try{
+            if(pointerWm==null)pointerWm=(WindowManager)getSystemService(WINDOW_SERVICE);
+            if(hoverHighlight==null){
+                hoverHighlight=new View(this);hoverHighlight.setBackgroundResource(R.drawable.hover_highlight);
+                hoverParams=new WindowManager.LayoutParams(Math.max(1,r.width()),Math.max(1,r.height()),
+                    WindowManager.LayoutParams.TYPE_ACCESSIBILITY_OVERLAY,
+                    WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE|WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE|
+                    WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN|WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS,
+                    PixelFormat.TRANSLUCENT);
+                hoverParams.gravity=Gravity.TOP|Gravity.LEFT;hoverParams.x=r.left;hoverParams.y=r.top;
+                pointerWm.addView(hoverHighlight,hoverParams);
+            }else{
+                hoverParams.width=Math.max(1,r.width());hoverParams.height=Math.max(1,r.height());hoverParams.x=r.left;hoverParams.y=r.top;
+                hoverHighlight.setVisibility(View.VISIBLE);pointerWm.updateViewLayout(hoverHighlight,hoverParams);
+            }
+        }catch(RuntimeException ignored){removeHoverHighlight();}
+    }
+
+    private void clearHoverInternal(){
+        MouseService owner=ServiceRegistry.get();if(owner!=null)owner.setLinkHovered(false);
+        if(hoveredNode!=null){try{hoveredNode.recycle();}catch(Exception ignored){}hoveredNode=null;}
+        if(hoverHighlight!=null)hoverHighlight.setVisibility(View.GONE);
+    }
+
+    private void removeHoverHighlight(){
+        if(hoverHighlight!=null&&pointerWm!=null){try{pointerWm.removeView(hoverHighlight);}catch(Exception ignored){}}
+        hoverHighlight=null;hoverParams=null;
     }
 
     public static void hideAndRemovePointer(){
@@ -370,10 +470,13 @@ public class MouseAccessibilityService extends AccessibilityService {
     @Override public void onAccessibilityEvent(AccessibilityEvent e){}
     @Override public void onInterrupt(){}
     @Override public void onDestroy(){
+        // Remove key filtering before doing any other cleanup so a service shutdown
+        // cannot leave the TV remote trapped by this service.
+        setKeyFilteringEnabled(false);
         stopMove(0);cancelLongPress();
         if (backLongPress != null) handler.removeCallbacks(backLongPress);
         backLongPress = null;
-        removePointerInternal();
+        removeHoverHighlight();removePointerInternal();clearHoverInternal();
         MouseService ms=ServiceRegistry.get();
         if(ms!=null) ms.restoreFallbackPointer();
         instance=null;super.onDestroy();

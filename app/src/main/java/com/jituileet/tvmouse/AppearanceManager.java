@@ -44,6 +44,23 @@ public final class AppearanceManager {
         c.getSharedPreferences(PREF, Context.MODE_PRIVATE).edit().putString("fixed_selected", id).putBoolean("fixed_shared", false).apply();
         MouseService s=ServiceRegistry.get(); if(s!=null && s.isScroll()) s.applyAppearance();
     }
+    public static boolean isLinkShared(Context c) { return c.getSharedPreferences(PREF, Context.MODE_PRIVATE).getBoolean("link_shared", false); }
+    public static void setLinkShared(Context c, boolean shared) {
+        c.getSharedPreferences(PREF, Context.MODE_PRIVATE).edit().putBoolean("link_shared", shared).apply();
+        MouseService s=ServiceRegistry.get(); if(s!=null) s.applyAppearance();
+    }
+    public static String getSelectedLink(Context c) { return c.getSharedPreferences(PREF, Context.MODE_PRIVATE).getString("link_selected", "default"); }
+    public static void selectLink(Context c, String id) {
+        c.getSharedPreferences(PREF, Context.MODE_PRIVATE).edit().putString("link_selected", id).putBoolean("link_shared", false).apply();
+        MouseService s=ServiceRegistry.get(); if(s!=null) s.applyAppearance();
+    }
+    public static File selectedLinkFile(Context c) {
+        if(isLinkShared(c)) return selectedFile(c);
+        String id=getSelectedLink(c); if(!isCustom(id)) return null;
+        try { int index=Integer.parseInt(id.substring("custom_".length())); if(index<0||index>=count(c))return null; String path=file(c,index); if(path.length()==0)return null; File f=new File(path); return f.isFile()?f:null; }
+        catch(Exception e){return null;}
+    }
+
     public static File selectedFixedFile(Context c) {
         if(isFixedShared(c)) return selectedFile(c);
         String id=getSelectedFixed(c);
@@ -72,6 +89,7 @@ public final class AppearanceManager {
         android.content.SharedPreferences prefs = c.getSharedPreferences(PREF, Context.MODE_PRIVATE);
         String general = prefs.getString(SELECTED, "default");
         String fixed = prefs.getString("fixed_selected", "default");
+        String link = prefs.getString("link_selected", "default");
         String deletedPath = prefs.getString("file_" + index, "");
         if (deletedPath.length() > 0) new File(deletedPath).delete();
 
@@ -83,6 +101,7 @@ public final class AppearanceManager {
         e.remove("name_" + (total - 1)).remove("file_" + (total - 1)).putInt("count", total - 1);
         e.putString(SELECTED, remapId(general, index));
         e.putString("fixed_selected", remapId(fixed, index));
+        e.putString("link_selected", remapId(link, index));
         e.apply();
         MouseService service = ServiceRegistry.get();
         if (service != null) service.applyAppearance();

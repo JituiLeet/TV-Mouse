@@ -10,19 +10,17 @@ Control the mouse pointer on Android TV with a remote and operate other apps lik
 - Pointer sensitivity and size controls in Other Settings.
 - Simplified main screen with only Enable/Disable Pointer, Hide/Show Pointer, and Other Settings.
 - Fixed Scroll: press Volume Down + Menu to enable it. Once enabled, it can only be disabled by holding Back for 3 seconds.
-- Quick Settings Access: press Volume Up + Menu.
-- Custom pointer appearances: import 128 × 128 pixel PNG or JPG images, set an appearance as the pointer, rename it, or delete it. Normal and Fixed Scroll modes can share an appearance.
+- Shortcut Settings: configure single-key triggers, multi-key combinations, or timed key holds for opening settings and enabling Fixed Scroll.
+- Hover feedback: hovering over clickable links or interactive controls shows a highlight and switches to the index-finger Link Select cursor.
+- Custom pointer appearances: import 128 × 128 pixel PNG or JPG images, rename or delete them. Normal, Fixed Scroll, and Link Select pointers can each share the normal appearance or use an independent one.
 - Chinese and English interfaces, following the system language by default with manual switching available.
 
 ## Usage
 
 Grant overlay and accessibility permissions before enabling the mouse. The main screen provides pointer enable/disable, hide/show, and Other Settings. Other Settings includes sensitivity, pointer size, appearance, language, and permission shortcuts.
 
-Press Volume Up + Menu to open settings. Press Volume Down + Menu to enable Fixed Scroll. While active, hold Back for 3 seconds to disable it.
+Customize triggers in Other Settings → Shortcut Settings, including single keys, multi-key combinations, and timed holds. While Fixed Scroll is active, hold Back for 3 seconds to disable it. If the remote stops responding after an accessibility-service error, disable TV Mouse in system Accessibility settings and enable it again.
 
-## Version
-
-Version: 1.2.0 (versionCode 3)
 
 ## Compatibility
 

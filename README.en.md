@@ -15,7 +15,6 @@ Control the mouse pointer on Android TV with a remote and operate other apps lik
 - Fixed Scroll: Volume Down + Menu enables it by default; holding Back for 3 seconds disables it by default. Both can be customized.
 - Custom pointer appearances: import 128 × 128 pixel PNG or JPG images, set an appearance as the pointer, rename it, or delete it. Normal and Fixed Scroll modes can share an appearance.
 - Chinese and English interfaces, following the system language by default with manual switching available.
-- A safe fallback is used when the accessibility service exits unexpectedly to help restore normal remote-control operation.
 
 ## Usage
 

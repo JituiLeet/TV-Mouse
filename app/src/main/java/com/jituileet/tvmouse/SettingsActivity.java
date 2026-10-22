@@ -74,6 +74,11 @@ public class SettingsActivity extends Activity {
         addShortcutRow(getString(R.string.shortcut_hide_pointer),ShortcutConfig.HIDE_POINTER);
         TextView hint=text(getString(R.string.shortcut_settings_hint),13,false); hint.setTextColor(Color.LTGRAY);
         hint.setPadding(dp(4),dp(10),dp(4),dp(12)); box.addView(hint,new LinearLayout.LayoutParams(-1,-2));
+        addRow("↺",getString(R.string.shortcut_reset_defaults),v->new AlertDialog.Builder(this)
+            .setTitle(R.string.shortcut_reset_defaults)
+            .setMessage(R.string.shortcut_reset_confirm)
+            .setPositiveButton(R.string.confirm,(d,w)->{ShortcutConfig.resetDefaults(this);showShortcutPanel();})
+            .setNegativeButton(R.string.cancel,null).show());
         addRow("‹",getString(R.string.back),v->buildMainPanel());
         if(box.getChildCount()>1)box.getChildAt(1).requestFocus();
     }

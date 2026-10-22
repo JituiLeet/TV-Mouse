@@ -39,6 +39,15 @@ public final class ShortcutConfig {
         } catch(Exception ignored) {}
         return new Config("combo",new int[]{0},0);
     }
+    /** Restore all user-configurable shortcuts to their built-in defaults. */
+    public static void resetDefaults(Context c) {
+        c.getSharedPreferences(PREFS, Context.MODE_PRIVATE).edit()
+            .remove(OPEN_SETTINGS)
+            .remove(ENABLE_SCROLL)
+            .remove(HIDE_POINTER)
+            .apply();
+    }
+
     public static void saveCombo(Context c,String action,int[] keys) {
         StringBuilder b=new StringBuilder("combo:");
         for(int i=0;i<keys.length;i++){if(i>0)b.append(',');b.append(keys[i]);}

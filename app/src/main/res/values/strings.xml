@@ -76,6 +76,9 @@
     <string name="shortcut_time_hint">（1 秒等于 1000ms）</string>
     <string name="shortcut_minimum_time">长按时间不能低于 1000ms</string>
     <string name="shortcut_need_key">请至少设置一个按钮</string>
+    <string name="shortcut_reset_defaults">重置默认快捷键</string>
+    <string name="shortcut_reset_confirm">将恢复所有可配置快捷键的默认设置：音量加 + 菜单键打开设置，音量减 + 菜单键开启固定滑动，隐藏 / 显示鼠标指针快捷键清空。是否继续？</string>
+    <string name="confirm">确定</string>
     <string name="shortcut_settings_hint">组合键最多包含三个按钮。长按时间最低为 1000ms，不设上限。</string>
 
 </resources>

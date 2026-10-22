@@ -76,6 +76,9 @@
     <string name="shortcut_time_hint">(1 second equals 1000 ms)</string>
     <string name="shortcut_minimum_time">Hold duration must be at least 1000 ms</string>
     <string name="shortcut_need_key">Please configure at least one button</string>
+    <string name="shortcut_reset_defaults">Reset Default Shortcuts</string>
+    <string name="shortcut_reset_confirm">Restore all configurable shortcuts to defaults: Volume Up + Menu opens Settings, Volume Down + Menu enables fixed scrolling, and the hide/show pointer shortcut is cleared. Continue?</string>
+    <string name="confirm">Confirm</string>
     <string name="shortcut_settings_hint">A combination can contain up to three buttons. Hold duration must be at least 1000 ms, with no upper limit.</string>
 
 </resources>

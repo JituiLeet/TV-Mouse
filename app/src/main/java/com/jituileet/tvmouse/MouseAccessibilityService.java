@@ -16,7 +16,6 @@ import android.view.accessibility.AccessibilityNodeInfo;
 import android.view.KeyEvent;
 import android.view.ViewConfiguration;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
 
 public class MouseAccessibilityService extends AccessibilityService {
@@ -30,11 +29,14 @@ public class MouseAccessibilityService extends AccessibilityService {
     private Runnable backLongPress;
     private boolean backKeyTracking;
     private boolean backLongPressTriggered;
-    private final Set<Integer> shortcutKeysDown = new HashSet<>();
-    private boolean settingsShortcutTriggered, fixedShortcutTriggered;
-    private Runnable settingsHoldRunnable, fixedHoldRunnable;
     private int volumeKeyHeld = 0;
     private boolean menuHeld, comboTriggered;
+    private final Set<Integer> shortcutPressed = new HashSet<>();
+    private final Set<Integer> shortcutConsumed = new HashSet<>();
+    private int activeHoldKey;
+    private String activeHoldAction;
+    private boolean activeHoldTriggered;
+    private Runnable configuredHoldRunnable;
     private WindowManager pointerWm;
     private ImageView pointerView;
     private WindowManager.LayoutParams pointerParams;
@@ -58,134 +60,158 @@ public class MouseAccessibilityService extends AccessibilityService {
     public static void setKeyFilteringEnabled(boolean enabled) {
         MouseAccessibilityService s = instance;
         if (s == null) return;
-        try {
-            AccessibilityServiceInfo info = s.getServiceInfo();
-            if (info == null) return;
-            if (enabled) info.flags |= AccessibilityServiceInfo.FLAG_REQUEST_FILTER_KEY_EVENTS;
-            else info.flags &= ~AccessibilityServiceInfo.FLAG_REQUEST_FILTER_KEY_EVENTS;
-            info.flags |= AccessibilityServiceInfo.FLAG_RETRIEVE_INTERACTIVE_WINDOWS;
-            s.setServiceInfo(info);
-        } catch (RuntimeException ignored) {
-            // Fail open if Android rejects the runtime update.
-        }
+        AccessibilityServiceInfo info = s.getServiceInfo();
+        if (info == null) return;
+        if (enabled) info.flags |= AccessibilityServiceInfo.FLAG_REQUEST_FILTER_KEY_EVENTS;
+        else info.flags &= ~AccessibilityServiceInfo.FLAG_REQUEST_FILTER_KEY_EVENTS;
+        info.flags |= AccessibilityServiceInfo.FLAG_RETRIEVE_INTERACTIVE_WINDOWS;
+        s.setServiceInfo(info);
     }
 
     @Override public boolean onKeyEvent(KeyEvent e) {
-        try { return handleKeyEventSafely(e); }
-        catch (RuntimeException ignored) {
-            clearShortcutState();
-            setKeyFilteringEnabled(false);
-            return false;
-        }
-    }
+        int k = e.getKeyCode();
+        boolean down = e.getAction() == KeyEvent.ACTION_DOWN;
+        boolean up = e.getAction() == KeyEvent.ACTION_UP;
+        MouseService ms = ServiceRegistry.get();
 
-    private boolean handleKeyEventSafely(KeyEvent e) {
-        int k=e.getKeyCode();
-        boolean down=e.getAction()==KeyEvent.ACTION_DOWN, up=e.getAction()==KeyEvent.ACTION_UP;
-        MouseService ms=ServiceRegistry.get();
-        if(ms==null) return false;
+        // When the mouse service is not running, this accessibility service must
+        // not handle any remote-control key.
+        if (ms == null) return false;
 
-        // Back is passed through normally unless Fixed Scroll is active, except when
-        // the user explicitly configured Back as a hold shortcut.
-        boolean backConfiguredHold =
-            (ShortcutConfig.mode(this,"settings")==ShortcutConfig.LONG_PRESS && ShortcutConfig.holdKey(this,"settings")==k) ||
-            (ShortcutConfig.mode(this,"fixed")==ShortcutConfig.LONG_PRESS && ShortcutConfig.holdKey(this,"fixed")==k);
-        if(k==KeyEvent.KEYCODE_BACK && (ms.isScroll() || !backConfiguredHold)) {
-            if(down && e.getRepeatCount()==0 && ms.isScroll()) {
+        // Preserve the established fixed-scroll exit gesture: only a 3-second
+        // Back hold closes Fixed Scroll. Short Back presses pass through.
+        if (k == KeyEvent.KEYCODE_BACK && ms.isScroll()) {
+            if (down && e.getRepeatCount() == 0) {
                 backKeyTracking=true; backLongPressTriggered=false;
                 if(backLongPress!=null)handler.removeCallbacks(backLongPress);
                 backLongPress=()->{
                     MouseService current=ServiceRegistry.get();
-                    if(backKeyTracking && current!=null && current.isScroll()) {
-                        backLongPressTriggered=true; current.setScroll(false);
+                    if(backKeyTracking && current!=null && current.isScroll()){
+                        backLongPressTriggered=true;current.setScroll(false);
                     }
                 };
-                handler.postDelayed(backLongPress,3000); return false;
+                handler.postDelayed(backLongPress,3000);
+                return false;
             }
-            if(up && backKeyTracking) {
+            if(up && backKeyTracking){
                 if(backLongPress!=null)handler.removeCallbacks(backLongPress);
-                backLongPress=null; backKeyTracking=false;
-                boolean consume=backLongPressTriggered; backLongPressTriggered=false; return consume;
+                backLongPress=null;backKeyTracking=false;
+                boolean consume=backLongPressTriggered;backLongPressTriggered=false;
+                return consume;
             }
             return false;
         }
 
-        if(down && e.getRepeatCount()==0) {
-            shortcutKeysDown.add(k);
-            checkCombinationShortcut(ms,"settings");
-            checkCombinationShortcut(ms,"fixed");
-            scheduleHoldShortcut("settings",k);
-            scheduleHoldShortcut("fixed",k);
-        }
-        if(up) {
-            shortcutKeysDown.remove(k);
-            if(settingsHoldRunnable!=null && ShortcutConfig.holdKey(this,"settings")==k) { handler.removeCallbacks(settingsHoldRunnable); settingsHoldRunnable=null; }
-            if(fixedHoldRunnable!=null && ShortcutConfig.holdKey(this,"fixed")==k) { handler.removeCallbacks(fixedHoldRunnable); fixedHoldRunnable=null; }
-            settingsShortcutTriggered=false; fixedShortcutTriggered=false;
-        }
-        // Consume Menu to avoid a launcher opening its own menu while a shortcut
-        // is being assembled; other keys are consumed only if configured.
-        if(k==KeyEvent.KEYCODE_MENU || isConfiguredShortcutKey(k)) return true;
+        if (handleConfiguredShortcuts(e, ms)) return true;
 
-        if(k==KeyEvent.KEYCODE_DPAD_UP || k==KeyEvent.KEYCODE_DPAD_DOWN ||
-           k==KeyEvent.KEYCODE_DPAD_LEFT || k==KeyEvent.KEYCODE_DPAD_RIGHT) {
-            if(down) { startMove(k); return true; }
-            if(up) { stopMove(k); return true; }
+        if (k == KeyEvent.KEYCODE_DPAD_UP || k == KeyEvent.KEYCODE_DPAD_DOWN ||
+            k == KeyEvent.KEYCODE_DPAD_LEFT || k == KeyEvent.KEYCODE_DPAD_RIGHT) {
+            if (down) { startMove(k); return true; }
+            if (up) { stopMove(k); return true; }
         }
-        if(k==KeyEvent.KEYCODE_DPAD_CENTER || k==KeyEvent.KEYCODE_ENTER) {
-            if(down && e.getRepeatCount()==0) {
-                centerDownAt=System.currentTimeMillis(); longPressSent=false; cancelLongPress();
-                longPress=()->{ if(centerDownAt!=0) { longPressSent=true; performLongClickAt(currentX(),currentY()); } };
-                handler.postDelayed(longPress,ViewConfiguration.getLongPressTimeout()); return true;
+
+        if (k == KeyEvent.KEYCODE_DPAD_CENTER || k == KeyEvent.KEYCODE_ENTER) {
+            if (down && e.getRepeatCount() == 0) {
+                centerDownAt = System.currentTimeMillis(); longPressSent = false; cancelLongPress();
+                longPress = new Runnable() { @Override public void run() {
+                    if (centerDownAt != 0) { longPressSent = true; performLongClickAt(currentX(), currentY()); }
+                }};
+                handler.postDelayed(longPress, ViewConfiguration.getLongPressTimeout());
+                return true;
             }
-            if(up) { cancelLongPress(); if(!longPressSent)performClickAt(currentX(),currentY()); centerDownAt=0; longPressSent=false; return true; }
+            if (up) {
+                cancelLongPress();
+                if (!longPressSent) performClickAt(currentX(), currentY());
+                centerDownAt = 0; longPressSent = false; return true;
+            }
             return true;
         }
         return false;
     }
 
-    private boolean isConfiguredShortcutKey(int key) {
-        for(String action:new String[]{"settings","fixed"}) {
-            if(ShortcutConfig.mode(this,action)==ShortcutConfig.LONG_PRESS && ShortcutConfig.holdKey(this,action)==key) return true;
-            if(ShortcutConfig.keys(this,action).contains(key)) return true;
+    private static final String[] SHORTCUT_ACTIONS = new String[]{
+        ShortcutConfig.OPEN_SETTINGS, ShortcutConfig.ENABLE_SCROLL,
+        ShortcutConfig.HIDE_POINTER
+    };
+
+    private boolean handleConfiguredShortcuts(KeyEvent e, MouseService ms) {
+        final int key=e.getKeyCode();
+        final boolean down=e.getAction()==KeyEvent.ACTION_DOWN;
+        final boolean up=e.getAction()==KeyEvent.ACTION_UP;
+        if(!down&&!up)return key==KeyEvent.KEYCODE_MENU;
+
+        if(down && e.getRepeatCount()==0) {
+            shortcutPressed.add(key);
+            // A hold shortcut is activated only after its configured duration.
+            for(String action:SHORTCUT_ACTIONS) {
+                ShortcutConfig.Config cfg=ShortcutConfig.get(this,action);
+                if("hold".equals(cfg.mode) && cfg.keys.length>0 && cfg.keys[0]==key) {
+                    activeHoldKey=key;activeHoldAction=action;activeHoldTriggered=false;
+                    if(configuredHoldRunnable!=null)handler.removeCallbacks(configuredHoldRunnable);
+                    configuredHoldRunnable=()->{
+                        if(activeHoldKey==key && shortcutPressed.contains(key)) {
+                            activeHoldTriggered=runShortcutAction(activeHoldAction,ms);
+                        }
+                    };
+                    handler.postDelayed(configuredHoldRunnable,cfg.duration);
+                    // Keep Back short presses available to Android; consume its release
+                    // only when the configured hold actually fired.
+                    if(key!=KeyEvent.KEYCODE_BACK)return true;
+                    return false;
+                }
+            }
+            boolean comboMatch=false;
+            for(String action:SHORTCUT_ACTIONS) {
+                ShortcutConfig.Config cfg=ShortcutConfig.get(this,action);
+                if(!"combo".equals(cfg.mode)||cfg.keys.length==1&&cfg.keys[0]==0)continue;
+                boolean all=true;
+                for(int required:cfg.keys)if(!shortcutPressed.contains(required)){all=false;break;}
+                if(all){comboMatch=true;for(int required:cfg.keys)shortcutConsumed.add(required);runShortcutAction(action,ms);}
+            }
+            boolean isConfigured=false;
+            for(String action:SHORTCUT_ACTIONS){
+                ShortcutConfig.Config cfg=ShortcutConfig.get(this,action);
+                for(int configured:cfg.keys)if(configured!=0&&configured==key)isConfigured=true;
+            }
+            // Consume both halves of configured shortcut keys so the original
+            // key does not leak into volume, launcher, or D-pad handling.
+            if(isConfigured && key!=KeyEvent.KEYCODE_BACK && key!=KeyEvent.KEYCODE_VOLUME_UP && key!=KeyEvent.KEYCODE_VOLUME_DOWN) shortcutConsumed.add(key);
+            // Menu is consumed to prevent the TV launcher from opening its own menu.
+            return key==KeyEvent.KEYCODE_MENU || comboMatch || (isConfigured && key!=KeyEvent.KEYCODE_BACK && key!=KeyEvent.KEYCODE_VOLUME_UP && key!=KeyEvent.KEYCODE_VOLUME_DOWN);
         }
+        if(up) {
+            boolean consume=shortcutConsumed.remove(key);
+            if(activeHoldKey==key) {
+                if(configuredHoldRunnable!=null)handler.removeCallbacks(configuredHoldRunnable);
+                configuredHoldRunnable=null;
+                boolean fired=activeHoldTriggered;
+                String action=activeHoldAction;
+                activeHoldKey=0;activeHoldAction=null;activeHoldTriggered=false;
+                shortcutPressed.remove(key);
+                if(fired)return true;
+                return key==KeyEvent.KEYCODE_MENU ? true : (key==KeyEvent.KEYCODE_BACK ? false : true);
+            }
+            shortcutPressed.remove(key);
+            if(key==KeyEvent.KEYCODE_MENU)return true;
+            return consume;
+        }
+        if(down) {
+            boolean configured=false;
+            for(String action:SHORTCUT_ACTIONS) {
+                ShortcutConfig.Config cfg=ShortcutConfig.get(this,action);
+                for(int configuredKey:cfg.keys)if(configuredKey!=0&&configuredKey==key)configured=true;
+            }
+            return key==KeyEvent.KEYCODE_MENU || (configured && key!=KeyEvent.KEYCODE_BACK && key!=KeyEvent.KEYCODE_VOLUME_UP && key!=KeyEvent.KEYCODE_VOLUME_DOWN);
+        }
+        return key==KeyEvent.KEYCODE_MENU;
+    }
+
+    private boolean runShortcutAction(String action,MouseService ms) {
+        if(ms==null||action==null)return false;
+        if(ShortcutConfig.OPEN_SETTINGS.equals(action)){ms.showTvPanel();return true;}
+        if(ShortcutConfig.ENABLE_SCROLL.equals(action)){if(!ms.isScroll())ms.setScroll(true);return true;}
+        if(ShortcutConfig.HIDE_POINTER.equals(action)){ms.toggleHidden();return true;}
         return false;
-    }
-
-    private void checkCombinationShortcut(MouseService ms,String action) {
-        if(ShortcutConfig.mode(this,action)!=ShortcutConfig.COMBINATION) return;
-        List<Integer> required=ShortcutConfig.keys(this,action);
-        if(required.isEmpty() || !shortcutKeysDown.containsAll(required)) return;
-        if("settings".equals(action)) {
-            if(!settingsShortcutTriggered) { settingsShortcutTriggered=true; ms.showTvPanel(); }
-        } else if(!fixedShortcutTriggered && !ms.isScroll()) {
-            fixedShortcutTriggered=true; ms.setScroll(true);
-        }
-    }
-
-    private void scheduleHoldShortcut(String action,int key) {
-        if(ShortcutConfig.mode(this,action)!=ShortcutConfig.LONG_PRESS || ShortcutConfig.holdKey(this,action)!=key) return;
-        final Runnable task;
-        if("settings".equals(action)) {
-            if(settingsHoldRunnable!=null)handler.removeCallbacks(settingsHoldRunnable);
-            task=()->{ if(shortcutKeysDown.contains(key)) { settingsShortcutTriggered=true; MouseService current=ServiceRegistry.get(); if(current!=null)current.showTvPanel(); } };
-            settingsHoldRunnable=task;
-        } else {
-            if(fixedHoldRunnable!=null)handler.removeCallbacks(fixedHoldRunnable);
-            task=()->{ if(shortcutKeysDown.contains(key)) { fixedShortcutTriggered=true; MouseService current=ServiceRegistry.get(); if(current!=null&&!current.isScroll())current.setScroll(true); } };
-            fixedHoldRunnable=task;
-        }
-        handler.postDelayed(task,ShortcutConfig.holdMs(this,action));
-    }
-
-    private void clearShortcutState() {
-        shortcutKeysDown.clear();
-        if(settingsHoldRunnable!=null)handler.removeCallbacks(settingsHoldRunnable);
-        if(fixedHoldRunnable!=null)handler.removeCallbacks(fixedHoldRunnable);
-        settingsHoldRunnable=null; fixedHoldRunnable=null;
-        settingsShortcutTriggered=false; fixedShortcutTriggered=false;
-        if(backLongPress!=null)handler.removeCallbacks(backLongPress);
-        backLongPress=null; backKeyTracking=false; backLongPressTriggered=false;
     }
 
     private int currentX() { MouseService s=ServiceRegistry.get(); return s==null?1:s.getPointerX(); }
@@ -409,19 +435,26 @@ public class MouseAccessibilityService extends AccessibilityService {
 
     @Override public void onAccessibilityEvent(AccessibilityEvent e){}
     @Override public void onInterrupt(){
-        setKeyFilteringEnabled(false);
-        clearShortcutState();
-        stopMove(0); cancelLongPress();
+        // Fail open immediately if Android interrupts the accessibility service.
+        try { setKeyFilteringEnabled(false); } catch (RuntimeException ignored) {}
+        MouseService ms=ServiceRegistry.get();
+        if(ms!=null)try { ms.stopSelf(); } catch (RuntimeException ignored) {}
     }
     @Override public void onDestroy(){
-        setKeyFilteringEnabled(false);
-        clearShortcutState();
         stopMove(0);cancelLongPress();
         if (backLongPress != null) handler.removeCallbacks(backLongPress);
-        backLongPress = null;
+        if (configuredHoldRunnable != null) handler.removeCallbacks(configuredHoldRunnable);
+        backLongPress = null; configuredHoldRunnable=null;
+        shortcutPressed.clear(); shortcutConsumed.clear(); activeHoldKey=0; activeHoldAction=null; activeHoldTriggered=false;
+        try { setKeyFilteringEnabled(false); } catch (RuntimeException ignored) {}
         removePointerInternal();
         MouseService ms=ServiceRegistry.get();
-        if(ms!=null) ms.restoreFallbackPointer();
+        if(ms!=null) {
+            try { ms.restoreFallbackPointer(); } catch (RuntimeException ignored) {}
+            // Fail open: if the accessibility service disconnects/crashes, stop the
+            // companion mouse service so no stale shortcut filtering can trap the remote.
+            try { ms.stopSelf(); } catch (RuntimeException ignored) {}
+        }
         instance=null;super.onDestroy();
     }
 }

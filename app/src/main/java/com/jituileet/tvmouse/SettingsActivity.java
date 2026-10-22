@@ -8,9 +8,6 @@ import android.net.Uri;
 import android.os.*;
 import android.view.*;
 import android.widget.*;
-import android.view.KeyEvent;
-import java.util.ArrayList;
-import java.util.List;
 
 /** Android-TV-style right-side settings panel used from both the app and the global shortcut. */
 public class SettingsActivity extends Activity {
@@ -59,12 +56,84 @@ public class SettingsActivity extends Activity {
         addRow("➤",getString(R.string.mouse_sensitivity),v->showSensitivityDialog());
         addRow("↗",getString(R.string.pointer_size),v->showPointerSizeDialog());
         addRow("✦",getString(R.string.custom_appearance),v->showAppearancePanel());
-        addRow("⌨",getString(R.string.shortcut_settings),v->showShortcutSettings());
         addRow("文",getString(R.string.language),v->showLanguagePanel());
+        addRow("⌨",getString(R.string.shortcut_settings),v->showShortcutPanel());
         addRow("■",getString(R.string.close_mouse),v->{MouseService s=ServiceRegistry.get();if(s!=null)s.stopSelf();finish();});
         addRow("G",getString(R.string.github_project),v->openGithub());
         setContentView(screen);
         if(box.getChildCount()>1) box.getChildAt(1).requestFocus();
+    }
+
+
+    private void showShortcutPanel() {
+        box.removeAllViews();
+        TextView title=text(getString(R.string.shortcut_settings),23,true); title.setGravity(Gravity.CENTER_VERTICAL);
+        box.addView(title,new LinearLayout.LayoutParams(-1,dp(70)));
+        addShortcutRow(getString(R.string.shortcut_open_settings),ShortcutConfig.OPEN_SETTINGS);
+        addShortcutRow(getString(R.string.shortcut_enable_scroll),ShortcutConfig.ENABLE_SCROLL);
+        addShortcutRow(getString(R.string.shortcut_hide_pointer),ShortcutConfig.HIDE_POINTER);
+        TextView hint=text(getString(R.string.shortcut_settings_hint),13,false); hint.setTextColor(Color.LTGRAY);
+        hint.setPadding(dp(4),dp(10),dp(4),dp(12)); box.addView(hint,new LinearLayout.LayoutParams(-1,-2));
+        addRow("‹",getString(R.string.back),v->buildMainPanel());
+        if(box.getChildCount()>1)box.getChildAt(1).requestFocus();
+    }
+
+    private void addShortcutRow(String label,String action) {
+        addRow("⌨",label+"\n"+ShortcutConfig.summary(this,action),v->new AlertDialog.Builder(this)
+            .setTitle(label).setItems(new String[]{getString(R.string.shortcut_combo),getString(R.string.shortcut_hold)},(d,w)->{
+                if(w==0)showComboEditor(action,label);else showHoldEditor(action,label);
+            }).show());
+    }
+
+    private void showComboEditor(final String action,String label) {
+        final int[] keys=new int[]{0,0,0};
+        final Button[] buttons=new Button[3];
+        final ShortcutConfig.Config old=ShortcutConfig.get(this,action);
+        if("combo".equals(old.mode))for(int i=0;i<Math.min(3,old.keys.length);i++)keys[i]=old.keys[i];
+        LinearLayout content=new LinearLayout(this);content.setOrientation(LinearLayout.VERTICAL);content.setPadding(dp(18),dp(8),dp(18),dp(8));
+        TextView desc=text(getString(R.string.shortcut_combo_hint),15,false);content.addView(desc,new LinearLayout.LayoutParams(-1,dp(54)));
+        AlertDialog dialog=new AlertDialog.Builder(this).setTitle(label).setView(content)
+            .setPositiveButton(R.string.save,null).setNegativeButton(R.string.cancel,null).create();
+        for(int i=0;i<3;i++){
+            final int slot=i; buttons[i]=new Button(this);buttons[i].setAllCaps(false);buttons[i].setText(keys[i]==0?getString(R.string.shortcut_choose_button, i+1):ShortcutConfig.keyName(keys[i]));
+            content.addView(buttons[i],new LinearLayout.LayoutParams(-1,dp(54)));
+            buttons[i].setOnClickListener(v->showKeyCapture(key->{keys[slot]=key;buttons[slot].setText(ShortcutConfig.keyName(key));}));
+            buttons[i].setOnLongClickListener(v->{keys[slot]=0;buttons[slot].setText(getString(R.string.shortcut_choose_button,slot+1));return true;});
+        }
+        dialog.setOnShowListener(d->dialog.getButton(AlertDialog.BUTTON_POSITIVE).setOnClickListener(v->{
+            java.util.ArrayList<Integer> list=new java.util.ArrayList<>();for(int k:keys)if(k!=0&&!list.contains(k))list.add(k);
+            if(list.isEmpty()){toast(getString(R.string.shortcut_need_key));return;}
+            int[] result=new int[list.size()];for(int i=0;i<list.size();i++)result[i]=list.get(i);
+            ShortcutConfig.saveCombo(this,action,result);dialog.dismiss();showShortcutPanel();
+        }));
+        dialog.show();
+    }
+
+    private interface KeySelected { void selected(int keyCode); }
+    private void showKeyCapture(KeySelected selected) {
+        TextView catcher=text(getString(R.string.shortcut_press_any_key),18,true);catcher.setGravity(Gravity.CENTER);catcher.setFocusable(true);catcher.setFocusableInTouchMode(true);
+        AlertDialog d=new AlertDialog.Builder(this).setTitle(R.string.shortcut_select_key).setView(catcher).setNegativeButton(R.string.cancel,null).create();
+        catcher.setOnKeyListener((view,keyCode,event)->{
+            if(event.getAction()==KeyEvent.ACTION_DOWN && event.getRepeatCount()==0){selected.selected(keyCode);d.dismiss();return true;}return true;
+        });
+        d.setOnShowListener(x->catcher.requestFocus());d.show();catcher.requestFocus();
+    }
+
+    private void showHoldEditor(final String action,String label) {
+        final int[] key={ShortcutConfig.get(this,action).keys[0]};
+        final long[] duration={Math.max(1000,ShortcutConfig.get(this,action).duration)};
+        LinearLayout content=new LinearLayout(this);content.setOrientation(LinearLayout.VERTICAL);content.setPadding(dp(18),dp(8),dp(18),dp(8));
+        TextView desc=text(getString(R.string.shortcut_hold_hint),15,false);content.addView(desc,new LinearLayout.LayoutParams(-1,dp(48)));
+        Button choose=new Button(this);choose.setAllCaps(false);choose.setText(ShortcutConfig.keyName(key[0]));content.addView(choose,new LinearLayout.LayoutParams(-1,dp(54)));
+        EditText time=new EditText(this);time.setSingleLine(true);time.setInputType(android.text.InputType.TYPE_CLASS_NUMBER);time.setText(String.valueOf(duration[0]));time.setHint(getString(R.string.shortcut_milliseconds));content.addView(time,new LinearLayout.LayoutParams(-1,dp(54)));
+        TextView unit=text(getString(R.string.shortcut_time_hint),12,false);unit.setTextColor(Color.LTGRAY);content.addView(unit,new LinearLayout.LayoutParams(-1,dp(32)));
+        choose.setOnClickListener(v->showKeyCapture(k->{key[0]=k;choose.setText(ShortcutConfig.keyName(k));}));
+        AlertDialog dialog=new AlertDialog.Builder(this).setTitle(label).setView(content).setPositiveButton(R.string.save,null).setNegativeButton(R.string.cancel,null).create();
+        dialog.setOnShowListener(d->dialog.getButton(AlertDialog.BUTTON_POSITIVE).setOnClickListener(v->{
+            long ms;try{ms=Long.parseLong(time.getText().toString().trim());}catch(Exception e){ms=0;}
+            if(key[0]==0){toast(getString(R.string.shortcut_need_key));return;}if(ms<1000){time.setError(getString(R.string.shortcut_minimum_time));return;}
+            ShortcutConfig.saveHold(this,action,key[0],ms);dialog.dismiss();showShortcutPanel();
+        }));dialog.show();
     }
 
     private void showSensitivityDialog() {
@@ -176,50 +245,6 @@ public class SettingsActivity extends Activity {
                     }).setNegativeButton(R.string.cancel, null).show();
             }
         }).show();
-    }
-
-    private void showShortcutSettings(){
-        box.removeAllViews();TextView title=text(getString(R.string.shortcut_settings),23,true);title.setGravity(Gravity.CENTER_VERTICAL);box.addView(title,new LinearLayout.LayoutParams(-1,dp(70)));
-        TextView hint=text(getString(R.string.shortcut_instructions),14,false);hint.setTextColor(Color.LTGRAY);box.addView(hint,new LinearLayout.LayoutParams(-1,dp(76)));
-        addRow("⚙",getString(R.string.shortcut_open_settings),v->showShortcutEditor("settings"));
-        addRow("↕",getString(R.string.shortcut_fixed_scroll),v->showShortcutEditor("fixed"));
-        addRow("‹",getString(R.string.back),v->buildMainPanel());
-        if(box.getChildCount()>1)box.getChildAt(1).requestFocus();
-    }
-
-    private static final int[] SHORTCUT_KEYS={KeyEvent.KEYCODE_VOLUME_UP,KeyEvent.KEYCODE_VOLUME_DOWN,KeyEvent.KEYCODE_MENU,KeyEvent.KEYCODE_BACK,KeyEvent.KEYCODE_DPAD_CENTER,KeyEvent.KEYCODE_ENTER,KeyEvent.KEYCODE_DPAD_UP,KeyEvent.KEYCODE_DPAD_DOWN,KeyEvent.KEYCODE_DPAD_LEFT,KeyEvent.KEYCODE_DPAD_RIGHT,KeyEvent.KEYCODE_HOME,KeyEvent.KEYCODE_INFO};
-    private void showShortcutEditor(final String action){
-        final int currentMode=ShortcutConfig.mode(this,action);
-        final RadioGroup modeGroup=new RadioGroup(this);modeGroup.setOrientation(RadioGroup.VERTICAL);
-        RadioButton combo=new RadioButton(this);combo.setText(getString(R.string.shortcut_combination));combo.setId(1);modeGroup.addView(combo);
-        RadioButton hold=new RadioButton(this);hold.setText(getString(R.string.shortcut_long_press));hold.setId(2);modeGroup.addView(hold);modeGroup.check(currentMode==ShortcutConfig.LONG_PRESS?2:1);
-        new AlertDialog.Builder(this).setTitle(action.equals("settings")?R.string.shortcut_open_settings:R.string.shortcut_fixed_scroll).setView(modeGroup)
-            .setPositiveButton(R.string.save,(d,w)->{if(modeGroup.getCheckedRadioButtonId()==2)chooseHoldKey(action);else chooseComboKeys(action);})
-            .setNegativeButton(R.string.cancel,null).show();
-    }
-
-    private void chooseComboKeys(final String action){
-        final String[] names=new String[SHORTCUT_KEYS.length];final boolean[] checked=new boolean[SHORTCUT_KEYS.length];List<Integer> current=ShortcutConfig.keys(this,action);
-        for(int i=0;i<SHORTCUT_KEYS.length;i++){names[i]=ShortcutConfig.keyName(SHORTCUT_KEYS[i]);checked[i]=current.contains(SHORTCUT_KEYS[i]);}
-        new AlertDialog.Builder(this).setTitle(R.string.shortcut_choose_keys).setMultiChoiceItems(names,checked,(d,which,isChecked)->checked[which]=isChecked)
-            .setPositiveButton(R.string.save,(d,w)->{List<Integer> selected=new ArrayList<>();for(int i=0;i<checked.length;i++)if(checked[i])selected.add(SHORTCUT_KEYS[i]);if(selected.isEmpty()){toast(getString(R.string.shortcut_choose_keys));return;}ShortcutConfig.save(this,action,ShortcutConfig.COMBINATION,selected,ShortcutConfig.holdKey(this,action),ShortcutConfig.holdMs(this,action));toast(getString(R.string.shortcut_saved));showShortcutSettings();})
-            .setNegativeButton(R.string.cancel,null).show();
-    }
-
-    private void chooseHoldKey(final String action){
-        final String[] names=new String[SHORTCUT_KEYS.length];int selected=0;int current=ShortcutConfig.holdKey(this,action);
-        for(int i=0;i<SHORTCUT_KEYS.length;i++){names[i]=ShortcutConfig.keyName(SHORTCUT_KEYS[i]);if(SHORTCUT_KEYS[i]==current)selected=i;}
-        new AlertDialog.Builder(this).setTitle(R.string.shortcut_choose_hold_key).setSingleChoiceItems(names,selected,(d,which)->{
-            int key=SHORTCUT_KEYS[which];d.dismiss();chooseHoldDuration(action,key);
-        }).setNegativeButton(R.string.cancel,null).show();
-    }
-
-    private void chooseHoldDuration(final String action,final int key){
-        LinearLayout content=new LinearLayout(this);content.setOrientation(LinearLayout.VERTICAL);content.setPadding(dp(24),dp(8),dp(24),dp(8));
-        final int old=ShortcutConfig.holdMs(this,action);TextView value=text(getString(R.string.shortcut_hold_duration,old),16,false);value.setGravity(Gravity.CENTER);
-        SeekBar seek=new SeekBar(this);seek.setMax(47);seek.setProgress(Math.max(0,Math.min(47,(old-300)/100)));content.addView(value,new LinearLayout.LayoutParams(-1,dp(36)));content.addView(seek,new LinearLayout.LayoutParams(-1,dp(48)));
-        seek.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener(){public void onProgressChanged(SeekBar b,int p,boolean f){value.setText(getString(R.string.shortcut_hold_duration,300+p*100));}public void onStartTrackingTouch(SeekBar b){}public void onStopTrackingTouch(SeekBar b){}});
-        new AlertDialog.Builder(this).setTitle(R.string.shortcut_long_press).setView(content).setPositiveButton(R.string.save,(d,w)->{List<Integer> keys=new ArrayList<>();keys.add(key);ShortcutConfig.save(this,action,ShortcutConfig.LONG_PRESS,keys,key,300+seek.getProgress()*100);toast(getString(R.string.shortcut_saved));showShortcutSettings();}).setNegativeButton(R.string.cancel,null).show();
     }
 
     private void pickImage() {

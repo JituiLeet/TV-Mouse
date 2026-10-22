@@ -58,16 +58,24 @@
     <string name="cannot_open_link">Unable to open link</string>
     <string name="ok">OK</string>
     <string name="about_title">Help</string>
-    <string name="about_message">Core features:\n\n• Move the mouse pointer with the TV remote D-pad; hold a direction key for continuous movement. Adjust pointer sensitivity and size in Other Settings.\n• Press OK to click; hold OK for a long press.\n• In Other Settings → Shortcut Settings, configure multi-key combinations or timed holds for opening settings and enabling Fixed Scroll. Once Fixed Scroll is active, hold Back for 3 seconds to turn it off.\n• Customize separate pointer appearances for normal and Fixed Scroll modes, or share one appearance.\n• If the accessibility service is interrupted and the remote stops responding, disable TV Mouse in system Accessibility settings and enable it again.\n• Supports Simplified Chinese and English.</string>
+    <string name="about_message">Core features:\n\n• Move the mouse pointer with the TV remote D-pad; hold a direction key for continuous movement. Adjust pointer sensitivity and size in Other Settings.\n• Press OK to click; hold OK for a long press.\n• At screen edges, the pointer stays in place and scrolls in that direction. By default, press Volume Up + Menu to open settings and Volume Down + Menu to enable Fixed Scroll. Shortcuts, including the Fixed Scroll exit action, can be customized in Other Settings → Shortcut Settings.\n• Customize separate pointer appearances for normal and Fixed Scroll modes, or share one appearance.\n• Supports Simplified Chinese and English.</string>
     <string name="accessibility_hint">TV Mouse accessibility service for controlling the mouse pointer and performing clicks, long presses, and scrolling.</string>
     <string name="shortcut_settings">Shortcut Settings</string>
-    <string name="shortcut_open_settings">Open Settings Shortcut</string>
-    <string name="shortcut_fixed_scroll">Enable Fixed Scroll Shortcut</string>
-    <string name="shortcut_combination">Press one or more keys</string>
-    <string name="shortcut_long_press">Hold a specific key</string>
-    <string name="shortcut_choose_keys">Choose combination keys</string>
-    <string name="shortcut_choose_hold_key">Choose hold key</string>
-    <string name="shortcut_hold_duration">Hold duration: %1$d ms</string>
-    <string name="shortcut_saved">Shortcut saved</string>
-    <string name="shortcut_instructions">Configure a multi-key combination or hold a single key for opening settings and enabling Fixed Scroll.</string>
+    <string name="shortcut_open_settings">Open Settings</string>
+    <string name="shortcut_enable_scroll">Enable Fixed Scroll</string>
+    <string name="shortcut_hide_pointer">Hide / Show Pointer</string>
+    <string name="shortcut_close_scroll">Disable Fixed Scroll</string>
+    <string name="shortcut_combo">Press one or more buttons</string>
+    <string name="shortcut_hold">Hold a specific button</string>
+    <string name="shortcut_combo_hint">Select a button below, then press a remote key. Configure 1–3 keys. Long-press a slot to clear it.</string>
+    <string name="shortcut_choose_button">Choose button %1$d</string>
+    <string name="shortcut_press_any_key">Press any button on the remote</string>
+    <string name="shortcut_select_key">Select button</string>
+    <string name="shortcut_hold_hint">Select the button below, then press the remote key you want to use.</string>
+    <string name="shortcut_milliseconds">Hold duration (milliseconds)</string>
+    <string name="shortcut_time_hint">(1 second equals 1000 ms)</string>
+    <string name="shortcut_minimum_time">Hold duration must be at least 1000 ms</string>
+    <string name="shortcut_need_key">Please configure at least one button</string>
+    <string name="shortcut_settings_hint">A combination can contain up to three buttons. Hold duration must be at least 1000 ms, with no upper limit.</string>
+
 </resources>

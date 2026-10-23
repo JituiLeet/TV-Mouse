@@ -26,7 +26,8 @@ public final class ShortcutConfig {
         if (OPEN_SETTINGS.equals(action)) fallback="combo:24,82"; // Volume Up + Menu
         else if (ENABLE_SCROLL.equals(action)) fallback="combo:25,82"; // Volume Down + Menu
         else if (HIDE_POINTER.equals(action)) fallback="combo:0"; // unassigned
-        else fallback="hold:4:3000"; // Back 3 seconds
+        else if (CLOSE_SCROLL.equals(action)) fallback="hold:4:3000"; // Back 3 seconds
+        else fallback="combo:0";
         String raw=c.getSharedPreferences(PREFS,Context.MODE_PRIVATE).getString(action,fallback);
         try {
             String[] p=raw.split(":");
@@ -45,6 +46,7 @@ public final class ShortcutConfig {
             .remove(OPEN_SETTINGS)
             .remove(ENABLE_SCROLL)
             .remove(HIDE_POINTER)
+            .remove(CLOSE_SCROLL)
             .apply();
     }
 

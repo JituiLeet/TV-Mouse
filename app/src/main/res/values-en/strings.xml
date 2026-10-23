@@ -65,20 +65,21 @@
     <string name="shortcut_enable_scroll">Enable Fixed Scroll</string>
     <string name="shortcut_hide_pointer">Hide / Show Pointer</string>
     <string name="shortcut_close_scroll">Disable Fixed Scroll</string>
-    <string name="shortcut_combo">Press one or more buttons</string>
-    <string name="shortcut_hold">Hold a specific button</string>
-    <string name="shortcut_combo_hint">Select a button below, then press a remote key. Configure 1–3 keys. Long-press a slot to clear it.</string>
-    <string name="shortcut_choose_button">Choose button %1$d</string>
-    <string name="shortcut_press_any_key">Press any button on the remote</string>
-    <string name="shortcut_select_key">Select button</string>
-    <string name="shortcut_hold_hint">Select the button below, then press the remote key you want to use.</string>
+    <string name="shortcut_combo">Press one or more keys</string>
+    <string name="shortcut_hold">Hold a specific key</string>
+    <string name="shortcut_combo_hint">Select a slot, then press any key to assign it. Configure up to 3 keys. During key selection, hold any key for 3 seconds to clear the shortcut.</string>
+    <string name="shortcut_choose_button">Choose key %1$d</string>
+    <string name="shortcut_unassigned">Unassigned</string>
+    <string name="shortcut_press_any_key">Press any key; hold any key for 3 seconds to clear the shortcut</string>
+    <string name="shortcut_select_key">Select key</string>
+    <string name="shortcut_hold_hint">Select the button below, then press any key to assign it. Hold any key for 3 seconds to clear the shortcut.</string>
     <string name="shortcut_milliseconds">Hold duration (milliseconds)</string>
     <string name="shortcut_time_hint">(1 second equals 1000 ms)</string>
     <string name="shortcut_minimum_time">Hold duration must be at least 1000 ms</string>
-    <string name="shortcut_need_key">Please configure at least one button</string>
+    <string name="shortcut_need_key">Assign a key, or hold any key for 3 seconds to clear the shortcut</string>
     <string name="shortcut_reset_defaults">Reset Default Shortcuts</string>
-    <string name="shortcut_reset_confirm">Restore all configurable shortcuts to defaults: Volume Up + Menu opens Settings, Volume Down + Menu enables fixed scrolling, and the hide/show pointer shortcut is cleared. Continue?</string>
+    <string name="shortcut_reset_confirm">Restore all shortcuts to defaults: Volume Up + Menu opens Settings, Volume Down + Menu enables Fixed Scroll, holding Back for 3 seconds disables Fixed Scroll, and the hide/show pointer shortcut is cleared. Continue?</string>
     <string name="confirm">Confirm</string>
-    <string name="shortcut_settings_hint">A combination can contain up to three buttons. Hold duration must be at least 1000 ms, with no upper limit.</string>
+    <string name="shortcut_settings_hint">A combination can contain up to three keys. While assigning a shortcut, hold any key for 3 seconds to clear it. Hold duration must be at least 1000 ms, with no upper limit.</string>
 
 </resources>

@@ -78,29 +78,6 @@ public class MouseAccessibilityService extends AccessibilityService {
         // not handle any remote-control key.
         if (ms == null) return false;
 
-        // Preserve the established fixed-scroll exit gesture: only a 3-second
-        // Back hold closes Fixed Scroll. Short Back presses pass through.
-        if (k == KeyEvent.KEYCODE_BACK && ms.isScroll()) {
-            if (down && e.getRepeatCount() == 0) {
-                backKeyTracking=true; backLongPressTriggered=false;
-                if(backLongPress!=null)handler.removeCallbacks(backLongPress);
-                backLongPress=()->{
-                    MouseService current=ServiceRegistry.get();
-                    if(backKeyTracking && current!=null && current.isScroll()){
-                        backLongPressTriggered=true;current.setScroll(false);
-                    }
-                };
-                handler.postDelayed(backLongPress,3000);
-                return false;
-            }
-            if(up && backKeyTracking){
-                if(backLongPress!=null)handler.removeCallbacks(backLongPress);
-                backLongPress=null;backKeyTracking=false;
-                boolean consume=backLongPressTriggered;backLongPressTriggered=false;
-                return consume;
-            }
-            return false;
-        }
 
         if (handleConfiguredShortcuts(e, ms)) return true;
 
@@ -131,7 +108,7 @@ public class MouseAccessibilityService extends AccessibilityService {
 
     private static final String[] SHORTCUT_ACTIONS = new String[]{
         ShortcutConfig.OPEN_SETTINGS, ShortcutConfig.ENABLE_SCROLL,
-        ShortcutConfig.HIDE_POINTER
+        ShortcutConfig.HIDE_POINTER, ShortcutConfig.CLOSE_SCROLL
     };
 
     private boolean handleConfiguredShortcuts(KeyEvent e, MouseService ms) {
@@ -211,6 +188,7 @@ public class MouseAccessibilityService extends AccessibilityService {
         if(ShortcutConfig.OPEN_SETTINGS.equals(action)){ms.showTvPanel();return true;}
         if(ShortcutConfig.ENABLE_SCROLL.equals(action)){if(!ms.isScroll())ms.setScroll(true);return true;}
         if(ShortcutConfig.HIDE_POINTER.equals(action)){ms.toggleHidden();return true;}
+        if(ShortcutConfig.CLOSE_SCROLL.equals(action)){if(ms.isScroll())ms.setScroll(false);return true;}
         return false;
     }
 

@@ -47,17 +47,6 @@ public class AboutActivity extends Activity {
         title.setGravity(Gravity.CENTER);
         root.addView(title, new LinearLayout.LayoutParams(-1, dp(72)));
 
-        LinearLayout languages = new LinearLayout(this);
-        languages.setOrientation(LinearLayout.HORIZONTAL);
-        languages.setGravity(Gravity.CENTER);
-        Button zh = languageButton(getString(R.string.language_chinese));
-        Button en = languageButton(getString(R.string.language_english));
-        zh.setOnClickListener(v -> { LanguageManager.setMode(this, LanguageManager.ZH); recreate(); });
-        en.setOnClickListener(v -> { LanguageManager.setMode(this, LanguageManager.EN); recreate(); });
-        languages.addView(zh, new LinearLayout.LayoutParams(dp(220), dp(60)));
-        SpaceHolder.add(languages, dp(12));
-        languages.addView(en, new LinearLayout.LayoutParams(dp(220), dp(60)));
-        root.addView(languages, new LinearLayout.LayoutParams(-1, dp(76)));
 
         TextView content = text(getString(R.string.about_message), 17, false);
         content.setGravity(Gravity.LEFT | Gravity.TOP);
@@ -71,7 +60,7 @@ public class AboutActivity extends Activity {
 
         scroll.addView(root, new ScrollView.LayoutParams(-1, -2));
         setContentView(scroll);
-        zh.requestFocus();
+        back.requestFocus();
     }
 
     private Button languageButton(String label) {

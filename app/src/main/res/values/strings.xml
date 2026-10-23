@@ -65,20 +65,21 @@
     <string name="shortcut_enable_scroll">开启固定滑动</string>
     <string name="shortcut_hide_pointer">隐藏 / 显示鼠标指针</string>
     <string name="shortcut_close_scroll">关闭固定滑动</string>
-    <string name="shortcut_combo">按下一个或多个按钮</string>
-    <string name="shortcut_hold">长按指定按钮</string>
-    <string name="shortcut_combo_hint">点击下方按钮并按下遥控器按键，可设置 1–3 个按键组合。长按按钮可清空该位置。</string>
-    <string name="shortcut_choose_button">选择第 %1$d 个按钮</string>
-    <string name="shortcut_press_any_key">请按下任意一个遥控器按钮</string>
-    <string name="shortcut_select_key">选择按钮</string>
-    <string name="shortcut_hold_hint">点击下方按钮，然后按下要设置的遥控器按钮。</string>
+    <string name="shortcut_combo">按任意一个或多个按键</string>
+    <string name="shortcut_hold">长按指定按键</string>
+    <string name="shortcut_combo_hint">选择下方按钮后，按任意按键完成设置，最多可设置 3 个按键。设置过程中长按任意按键 3 秒，可清空当前快捷键。</string>
+    <string name="shortcut_choose_button">选择第 %1$d 个按键</string>
+    <string name="shortcut_unassigned">未设置</string>
+    <string name="shortcut_press_any_key">请按任意一个按键；长按任意按键 3 秒可清空设置</string>
+    <string name="shortcut_select_key">选择按键</string>
+    <string name="shortcut_hold_hint">点击下方按钮，然后按任意按键进行设置。长按任意按键 3 秒可清空当前快捷键。</string>
     <string name="shortcut_milliseconds">长按时间（毫秒）</string>
     <string name="shortcut_time_hint">（1 秒等于 1000ms）</string>
     <string name="shortcut_minimum_time">长按时间不能低于 1000ms</string>
-    <string name="shortcut_need_key">请至少设置一个按钮</string>
+    <string name="shortcut_need_key">请设置按键，或长按任意按键 3 秒清空快捷键</string>
     <string name="shortcut_reset_defaults">重置默认快捷键</string>
-    <string name="shortcut_reset_confirm">将恢复所有可配置快捷键的默认设置：音量加 + 菜单键打开设置，音量减 + 菜单键开启固定滑动，隐藏 / 显示鼠标指针快捷键清空。是否继续？</string>
+    <string name="shortcut_reset_confirm">将恢复所有快捷键的默认设置：音量加 + 菜单键打开设置，音量减 + 菜单键开启固定滑动，长按返回键 3 秒关闭固定滑动，隐藏 / 显示鼠标指针快捷键清空。是否继续？</string>
     <string name="confirm">确定</string>
-    <string name="shortcut_settings_hint">组合键最多包含三个按钮。长按时间最低为 1000ms，不设上限。</string>
+    <string name="shortcut_settings_hint">组合键最多包含三个按键。设置快捷键时，长按任意按键 3 秒可清空快捷键。长按触发时间最低为 1000ms，不设上限。</string>
 
 </resources>

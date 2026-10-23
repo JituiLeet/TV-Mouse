@@ -58,26 +58,38 @@ public final class ShortcutConfig {
     public static void saveHold(Context c,String action,int key,long ms) {
         c.getSharedPreferences(PREFS,Context.MODE_PRIVATE).edit().putString(action,"hold:"+key+":"+Math.max(1000,ms)).apply();
     }
-    public static String keyName(int key) {
-        if(key==0)return "—";
-        switch(key){
-            case KeyEvent.KEYCODE_DPAD_UP:return "↑"; case KeyEvent.KEYCODE_DPAD_DOWN:return "↓";
-            case KeyEvent.KEYCODE_DPAD_LEFT:return "←"; case KeyEvent.KEYCODE_DPAD_RIGHT:return "→";
-            case KeyEvent.KEYCODE_DPAD_CENTER:return "确定"; case KeyEvent.KEYCODE_ENTER:return "Enter";
-            case KeyEvent.KEYCODE_BACK:return "返回键"; case KeyEvent.KEYCODE_MENU:return "菜单键";
-            case KeyEvent.KEYCODE_VOLUME_UP:return "音量加"; case KeyEvent.KEYCODE_VOLUME_DOWN:return "音量减";
-            case KeyEvent.KEYCODE_VOLUME_MUTE:return "静音"; case KeyEvent.KEYCODE_HOME:return "主页键";
-            case KeyEvent.KEYCODE_INFO:return "信息键"; case KeyEvent.KEYCODE_CHANNEL_UP:return "频道加";
-            case KeyEvent.KEYCODE_CHANNEL_DOWN:return "频道减"; case KeyEvent.KEYCODE_MEDIA_PLAY_PAUSE:return "播放/暂停";
-            default: try{return KeyEvent.keyCodeToString(key).replace("KEYCODE_","");}catch(Exception e){return "按键 "+key;}
+    public static String keyName(Context context, int key) {
+        if (key == 0) return context.getString(R.string.shortcut_unassigned);
+        switch (key) {
+            case KeyEvent.KEYCODE_DPAD_UP: return "↑";
+            case KeyEvent.KEYCODE_DPAD_DOWN: return "↓";
+            case KeyEvent.KEYCODE_DPAD_LEFT: return "←";
+            case KeyEvent.KEYCODE_DPAD_RIGHT: return "→";
+            case KeyEvent.KEYCODE_DPAD_CENTER: return context.getString(R.string.shortcut_key_select);
+            case KeyEvent.KEYCODE_ENTER: return "Enter";
+            case KeyEvent.KEYCODE_BACK: return context.getString(R.string.shortcut_key_back);
+            case KeyEvent.KEYCODE_MENU: return context.getString(R.string.shortcut_key_menu);
+            case KeyEvent.KEYCODE_VOLUME_UP: return context.getString(R.string.shortcut_key_volume_up);
+            case KeyEvent.KEYCODE_VOLUME_DOWN: return context.getString(R.string.shortcut_key_volume_down);
+            case KeyEvent.KEYCODE_VOLUME_MUTE: return context.getString(R.string.shortcut_key_mute);
+            case KeyEvent.KEYCODE_HOME: return context.getString(R.string.shortcut_key_home);
+            case KeyEvent.KEYCODE_INFO: return context.getString(R.string.shortcut_key_info);
+            case KeyEvent.KEYCODE_CHANNEL_UP: return context.getString(R.string.shortcut_key_channel_up);
+            case KeyEvent.KEYCODE_CHANNEL_DOWN: return context.getString(R.string.shortcut_key_channel_down);
+            case KeyEvent.KEYCODE_MEDIA_PLAY_PAUSE: return context.getString(R.string.shortcut_key_play_pause);
+            default:
+                try { return KeyEvent.keyCodeToString(key).replace("KEYCODE_", ""); }
+                catch (Exception e) { return context.getString(R.string.shortcut_key_number, key); }
         }
     }
-    public static String summary(Context c,String action) {
-        Config cfg=get(c,action);
-        if("hold".equals(cfg.mode))return keyName(cfg.keys[0])+" · "+cfg.duration+" ms";
-        if(cfg.keys.length==1&&cfg.keys[0]==0)return "未设置";
-        List<String> names=new ArrayList<>();for(int k:cfg.keys)if(k!=0)names.add(keyName(k));
-        return names.isEmpty()?"未设置":join(names," + ");
+
+    public static String summary(Context c, String action) {
+        Config cfg = get(c, action);
+        if ("hold".equals(cfg.mode)) return keyName(c, cfg.keys[0]) + " · " + cfg.duration + " ms";
+        if (cfg.keys.length == 1 && cfg.keys[0] == 0) return c.getString(R.string.shortcut_unassigned);
+        List<String> names = new ArrayList<>();
+        for (int k : cfg.keys) if (k != 0) names.add(keyName(c, k));
+        return names.isEmpty() ? c.getString(R.string.shortcut_unassigned) : join(names, " + ");
     }
     private static String join(List<String> a,String sep){StringBuilder b=new StringBuilder();for(String s:a){if(b.length()>0)b.append(sep);b.append(s);}return b.toString();}
 }

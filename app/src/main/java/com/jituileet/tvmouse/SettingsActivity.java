@@ -101,10 +101,10 @@ public class SettingsActivity extends Activity {
         AlertDialog dialog=new AlertDialog.Builder(this).setTitle(label).setView(content)
             .setPositiveButton(R.string.save,null).setNegativeButton(R.string.cancel,null).create();
         for(int i=0;i<3;i++){
-            final int slot=i; buttons[i]=new Button(this);buttons[i].setAllCaps(false);buttons[i].setText(keys[i]==0?getString(R.string.shortcut_choose_button, i+1):ShortcutConfig.keyName(keys[i]));
+            final int slot=i; buttons[i]=new Button(this);buttons[i].setAllCaps(false);buttons[i].setText(keys[i]==0?getString(R.string.shortcut_unassigned):ShortcutConfig.keyName(this, keys[i]));
             content.addView(buttons[i],new LinearLayout.LayoutParams(-1,dp(54)));
-            buttons[i].setOnClickListener(v->showKeyCapture(key->{keys[slot]=key;buttons[slot].setText(key==0?getString(R.string.shortcut_unassigned):ShortcutConfig.keyName(key));}));
-            buttons[i].setOnLongClickListener(v->{keys[slot]=0;buttons[slot].setText(getString(R.string.shortcut_choose_button,slot+1));return true;});
+            buttons[i].setOnClickListener(v->showKeyCapture(key->{keys[slot]=key;buttons[slot].setText(key==0?getString(R.string.shortcut_unassigned):ShortcutConfig.keyName(this, key));}));
+            buttons[i].setOnLongClickListener(v->{keys[slot]=0;buttons[slot].setText(getString(R.string.shortcut_unassigned));return true;});
         }
         dialog.setOnShowListener(d->dialog.getButton(AlertDialog.BUTTON_POSITIVE).setOnClickListener(v->{
             java.util.ArrayList<Integer> list=new java.util.ArrayList<>();for(int k:keys)if(k!=0&&!list.contains(k))list.add(k);
@@ -145,10 +145,10 @@ public class SettingsActivity extends Activity {
         final long[] duration={Math.max(1000,ShortcutConfig.get(this,action).duration)};
         LinearLayout content=new LinearLayout(this);content.setOrientation(LinearLayout.VERTICAL);content.setPadding(dp(18),dp(8),dp(18),dp(8));
         TextView desc=text(getString(R.string.shortcut_hold_hint),15,false);content.addView(desc,new LinearLayout.LayoutParams(-1,dp(48)));
-        Button choose=new Button(this);choose.setAllCaps(false);choose.setText(key[0]==0?getString(R.string.shortcut_unassigned):ShortcutConfig.keyName(key[0]));content.addView(choose,new LinearLayout.LayoutParams(-1,dp(54)));
+        Button choose=new Button(this);choose.setAllCaps(false);choose.setText(key[0]==0?getString(R.string.shortcut_unassigned):ShortcutConfig.keyName(this, key[0]));content.addView(choose,new LinearLayout.LayoutParams(-1,dp(54)));
         EditText time=new EditText(this);time.setSingleLine(true);time.setInputType(android.text.InputType.TYPE_CLASS_NUMBER);time.setText(String.valueOf(duration[0]));time.setHint(getString(R.string.shortcut_milliseconds));content.addView(time,new LinearLayout.LayoutParams(-1,dp(54)));
         TextView unit=text(getString(R.string.shortcut_time_hint),12,false);unit.setTextColor(Color.LTGRAY);content.addView(unit,new LinearLayout.LayoutParams(-1,dp(32)));
-        choose.setOnClickListener(v->showKeyCapture(k->{key[0]=k;choose.setText(k==0?getString(R.string.shortcut_unassigned):ShortcutConfig.keyName(k));}));
+        choose.setOnClickListener(v->showKeyCapture(k->{key[0]=k;choose.setText(k==0?getString(R.string.shortcut_unassigned):ShortcutConfig.keyName(this, k));}));
         AlertDialog dialog=new AlertDialog.Builder(this).setTitle(label).setView(content).setPositiveButton(R.string.save,null).setNegativeButton(R.string.cancel,null).create();
         dialog.setOnShowListener(d->dialog.getButton(AlertDialog.BUTTON_POSITIVE).setOnClickListener(v->{
             long ms;try{ms=Long.parseLong(time.getText().toString().trim());}catch(Exception e){ms=0;}

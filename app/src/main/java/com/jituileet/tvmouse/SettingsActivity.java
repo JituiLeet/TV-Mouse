@@ -121,6 +121,7 @@ public class SettingsActivity extends Activity {
         final int[] pressedKey={0};
         final boolean[] cleared={false};
         final Runnable[] clearRunnable={null};
+        final Handler handler = new Handler(Looper.getMainLooper());
         catcher.setOnKeyListener((view,keyCode,event)->{
             if(event.getAction()==KeyEvent.ACTION_DOWN && event.getRepeatCount()==0){
                 pressedKey[0]=keyCode; cleared[0]=false;

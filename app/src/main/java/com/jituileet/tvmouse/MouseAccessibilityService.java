@@ -115,7 +115,7 @@ public class MouseAccessibilityService extends AccessibilityService {
         final int key=e.getKeyCode();
         final boolean down=e.getAction()==KeyEvent.ACTION_DOWN;
         final boolean up=e.getAction()==KeyEvent.ACTION_UP;
-        if(!down&&!up)return key==KeyEvent.KEYCODE_MENU;
+        if(!down&&!up)return false;
 
         if(down && e.getRepeatCount()==0) {
             shortcutPressed.add(key);
@@ -152,9 +152,10 @@ public class MouseAccessibilityService extends AccessibilityService {
             }
             // Consume both halves of configured shortcut keys so the original
             // key does not leak into volume, launcher, or D-pad handling.
-            if(isConfigured && key!=KeyEvent.KEYCODE_BACK && key!=KeyEvent.KEYCODE_VOLUME_UP && key!=KeyEvent.KEYCODE_VOLUME_DOWN) shortcutConsumed.add(key);
-            // Menu is consumed to prevent the TV launcher from opening its own menu.
-            return key==KeyEvent.KEYCODE_MENU || comboMatch || (isConfigured && key!=KeyEvent.KEYCODE_BACK && key!=KeyEvent.KEYCODE_VOLUME_UP && key!=KeyEvent.KEYCODE_VOLUME_DOWN);
+            if(isConfigured && key!=KeyEvent.KEYCODE_MENU && key!=KeyEvent.KEYCODE_BACK && key!=KeyEvent.KEYCODE_VOLUME_UP && key!=KeyEvent.KEYCODE_VOLUME_DOWN) shortcutConsumed.add(key);
+            // Do not swallow Menu on its own: only consume it when the configured
+            // combination actually matches. This keeps the remote's normal Menu key usable.
+            return comboMatch || (isConfigured && key!=KeyEvent.KEYCODE_MENU && key!=KeyEvent.KEYCODE_BACK && key!=KeyEvent.KEYCODE_VOLUME_UP && key!=KeyEvent.KEYCODE_VOLUME_DOWN);
         }
         if(up) {
             boolean consume=shortcutConsumed.remove(key);
@@ -166,10 +167,9 @@ public class MouseAccessibilityService extends AccessibilityService {
                 activeHoldKey=0;activeHoldAction=null;activeHoldTriggered=false;
                 shortcutPressed.remove(key);
                 if(fired)return true;
-                return key==KeyEvent.KEYCODE_MENU ? true : (key==KeyEvent.KEYCODE_BACK ? false : true);
+                return key==KeyEvent.KEYCODE_BACK ? false : key!=KeyEvent.KEYCODE_MENU;
             }
             shortcutPressed.remove(key);
-            if(key==KeyEvent.KEYCODE_MENU)return true;
             return consume;
         }
         if(down) {
@@ -178,9 +178,9 @@ public class MouseAccessibilityService extends AccessibilityService {
                 ShortcutConfig.Config cfg=ShortcutConfig.get(this,action);
                 for(int configuredKey:cfg.keys)if(configuredKey!=0&&configuredKey==key)configured=true;
             }
-            return key==KeyEvent.KEYCODE_MENU || (configured && key!=KeyEvent.KEYCODE_BACK && key!=KeyEvent.KEYCODE_VOLUME_UP && key!=KeyEvent.KEYCODE_VOLUME_DOWN);
+            return configured && key!=KeyEvent.KEYCODE_MENU && key!=KeyEvent.KEYCODE_BACK && key!=KeyEvent.KEYCODE_VOLUME_UP && key!=KeyEvent.KEYCODE_VOLUME_DOWN;
         }
-        return key==KeyEvent.KEYCODE_MENU;
+        return false;
     }
 
     private boolean runShortcutAction(String action,MouseService ms) {
